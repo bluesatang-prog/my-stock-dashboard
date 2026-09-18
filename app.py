@@ -244,63 +244,55 @@ st.markdown(f"**💰 현재 금 시세 (Gold Futures):** `${data['금 시세 (Go
 
 st.divider()
 
-# 6. [추가 섹션] 이코노미스트 - 디지털 경제뉴스 및 재테크 정보 (입력일 표기 포함)
-st.subheader("📰 이코노미스트 | 반도체 & 전력 인프라 핵심 뉴스")
-st.markdown("이코노미스트(economist.co.kr)에 보도된 반도체 및 전력 인프라 관련 최신 심층 리포트입니다.")
+# 6. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
+# 💡 새로운 뉴스를 추가하거나 수정하려면 아래 리스트에 항목을 추가/변경하시면 됩니다!
+archived_news = [
+    {
+        "category": "📈 반도체 / 전력",
+        "title": "반도체·전력 인프라주 동반 강세 속 증시 회복",
+        "url": "https://economist.co.kr/article/view/ecn202609090034",
+        "date": "2026.09.09 10:30"
+    },
+    {
+        "category": "⚡ 전력 / 요금",
+        "title": "\"전기요금 25조원 선납을\" 한전 요청에 삼전·닉스 거절",
+        "url": "https://economist.co.kr/article/view/ecn202609140001",
+        "date": "2026.09.14 14:15"
+    },
+    {
+        "category": "🏭 인프라 / 지역",
+        "title": "땅은 있어도 전기·물이 없다…비수도권 반도체 벨트 딜레마",
+        "url": "https://economist.co.kr/article/view/ecn202606240064",
+        "date": "2026.06.24 09:00"
+    },
+    {
+        "category": "💡 정책 / 반도체",
+        "title": "\"4년 내 완공 쉽지 않고, 전력 5배 확보해야\" 호남 반도체 진단",
+        "url": "https://economist.co.kr/article/view/ecn202607010009",
+        "date": "2026.07.01 11:20"
+    },
+    {
+        "category": "🌐 시장 동향",
+        "title": "[오늘의 삼전닉스] 증시·수출·세수에 한전까지 커지는 반도체 의존도",
+        "url": "https://economist.co.kr/article/view/ecn202609030021",
+        "date": "2026.09.03 08:45"
+    }
+]
 
-eco_col1, eco_col2, eco_col3, eco_col4, eco_col5 = st.columns(5)
+st.subheader("📰 이코노미스트 | 반도체 & 전력 인프라 핵심 리포트 아카이브")
+st.markdown("이코노미스트(economist.co.kr)에 보도된 반도체 및 전력 인프라 관련 핵심 심층 리포트 모음입니다.")
 
-with eco_col1:
-    st.markdown("""
-    <div class="news-box">
-        <div>
-            <div class="news-category">📈 반도체 / 전력</div>
-            <div class="news-title"><a href="https://economist.co.kr/article/view/ecn202609090034" target="_blank">반도체·전력 인프라주 동반 강세 속 증시 회복</a></div>
+# 5열 레이아웃을 동적으로 생성
+cols = st.columns(len(archived_news))
+
+for i, news in enumerate(archived_news):
+    with cols[i]:
+        st.markdown(f"""
+        <div class="news-box">
+            <div>
+                <div class="news-category">{news['category']}</div>
+                <div class="news-title"><a href="{news['url']}" target="_blank">{news['title']}</a></div>
+            </div>
+            <div class="news-date">🕒 입력 {news['date']}</div>
         </div>
-        <div class="news-date">🕒 입력 2026.09.09 10:30</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with eco_col2:
-    st.markdown("""
-    <div class="news-box">
-        <div>
-            <div class="news-category">⚡ 전력 / 요금</div>
-            <div class="news-title"><a href="https://economist.co.kr/article/view/ecn202609140001" target="_blank">"전기요금 25조원 선납을" 한전 요청에 삼전·닉스 거절</a></div>
-        </div>
-        <div class="news-date">🕒 입력 2026.09.14 14:15</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with eco_col3:
-    st.markdown("""
-    <div class="news-box">
-        <div>
-            <div class="news-category">🏭 인프라 / 지역</div>
-            <div class="news-title"><a href="https://economist.co.kr/article/view/ecn202606240064" target="_blank">땅은 있어도 전기·물이 없다…비수도권 반도체 벨트 딜레마</a></div>
-        </div>
-        <div class="news-date">🕒 입력 2026.06.24 09:00</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with eco_col4:
-    st.markdown("""
-    <div class="news-box">
-        <div>
-            <div class="news-category">💡 정책 / 반도체</div>
-            <div class="news-title"><a href="https://economist.co.kr/article/view/ecn202607010009" target="_blank">"4년 내 완공 쉽지 않고, 전력 5배 확보해야" 호남 반도체 진단</a></div>
-        </div>
-        <div class="news-date">🕒 입력 2026.07.01 11:20</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with eco_col5:
-    st.markdown("""
-    <div class="news-box">
-        <div>
-            <div class="news-category">🌐 시장 동향</div>
-            <div class="news-title"><a href="https://economist.co.kr/article/view/ecn202609030021" target="_blank">[오늘의 삼전닉스] 증시·수출·세수에 한전까지 커지는 반도체 의존도</a></div>
-        </div>
-        <div class="news-date">🕒 입력 2026.09.03 08:45</div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)

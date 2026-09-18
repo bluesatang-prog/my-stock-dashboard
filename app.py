@@ -167,7 +167,7 @@ h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 상단 히어로 배너 영역 (Carestream 딥브라운 톤 적용)
+# 3. 상단 히어로 배너 영역
 kst = pytz.timezone('Asia/Seoul')
 now_kst = datetime.datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -247,7 +247,7 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False, pre
     """
     st.markdown(html_code, unsafe_allow_html=True)
 
-# 5. 주요 지표 카드 섹션 (4열 레이아웃 - 금 시세 카드 포함)
+# 5. 주요 지표 카드 섹션
 st.subheader("📌 주요 거시경제 및 시장 지표 요약")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -320,29 +320,18 @@ with col_right:
 
 st.divider()
 
-# 7. 역사적 거시경제 위기 및 사이클 타임라인 그래프 섹션 (X축: 연도)
-st.subheader("📉 역사적 거시경제 위기 및 사이클 타임라인")
-st.markdown("1970년대부터 현재까지 글로벌 경제를 흔들었던 주요 위기와 구조적 변화를 연도별 타임라인 그래프와 카드 형태로 시각화한 데이터입니다.")
+# 7. 역사적 거시경제 위기 및 사이클 타임라인 그래프 섹션 (참조 이미지 스타일의 꺾은선 시계열 그래프)
+st.subheader("📉 역사적 거시경제 위기 및 사이클 타임라인 (시계열 추이)")
+st.markdown("1970년대 오일쇼크부터 현재까지 주요 거시경제 위기 국면의 심각도(충격 지수) 변화를 연도별 꺾은선 그래프로 시각화한 데이터입니다.")
 
-# 타임라인 그래프용 데이터 준비 (x축 컬럼을 '연도(Year)'로 설정)
-history_chart_data = pd.DataFrame([
-    {"연도(Year)": 1975, "Event": "1차/2차 오일쇼크 & 스태그플레이션", "Impact": 8, "Category": "에너지 위기"},
-    {"연도(Year)": 1998, "Event": "아시아 외환위기 (한국 IMF)", "Impact": 7, "Category": "신흥국 위기"},
-    {"연도(Year)": 2001, "Event": "닷컴버블 붕괴", "Impact": 6, "Category": "자산 거품"},
-    {"연도(Year)": 2008, "Event": "글로벌 금융위기 (서브프라임)", "Impact": 10, "Category": "금융 시스템 위기"},
-    {"연도(Year)": 2020, "Event": "코로나19 팬데믹 충격", "Impact": 9, "Category": "팬데믹"},
-    {"연도(Year)": 2024, "Event": "고물가·고금리 및 지정학 리스크", "Impact": 7, "Category": "인플레이션"}
-])
+# 참고 이미지와 같이 연도별 연속 흐름을 보여주는 시계열 데이터셋 구성
+history_trend_data = pd.DataFrame({
+    "연도(Year)": [1970, 1973, 1975, 1980, 1982, 1990, 1997, 2001, 2003, 2008, 2010, 2020, 2022, 2026],
+    "경제 충격 지수 (Impact Index)": [45, 75, 80, 85, 70, 40, 75, 60, 50, 100, 55, 90, 75, 65]
+}).set_index("연도(Year)")
 
-# Streamlit 산점도 그래프 (X축을 '연도(Year)'로 지정)
-st.scatter_chart(
-    history_chart_data,
-    x="연도(Year)",
-    y="Impact",
-    size="Impact",
-    color="Category",
-    use_container_width=True
-)
+# Streamlit 내장 꺾은선(Line) 차트 적용 (참조 이미지처럼 연도별 흐름을 선으로 연결)
+st.line_chart(history_trend_data, use_container_width=True)
 
 # 상세 내용 카드 그리드 배치 (2열)
 col_h1, col_h2 = st.columns(2)

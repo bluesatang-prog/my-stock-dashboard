@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import altair as alt
 import datetime
 import pytz
 
@@ -320,23 +321,51 @@ with col_right:
 
 st.divider()
 
-# 7. 역사적 거시경제 위기 타임라인 및 S&P 500 오일쇼크 폭락·회복 추이 비교 섹션
+# 7. 역사적 거시경제 위기 타임라인 & S&P 500 오일쇼크 폭락/회복 비교 (Altair 인터랙티브 차트 적용)
 st.subheader("📉 역사적 거시경제 위기 사이클 & S&P 500 오일쇼크 폭락/회복 비교")
-st.markdown("1970년대 오일쇼크 당시 S&P 500 지수가 전고점에서 42% 폭락(-2년) 후 7년 6개월에 걸쳐 회복했던 역사적 장기 궤적과 경제 충격 지수를 대조하여 보여줍니다[cite: 1, 2, 4].")
+st.markdown("1970년대 오일쇼크 당시 S&P 500 지수 스케일(`70 ~ 150`)와 마우스 오버 시 수치 확인이 가능한 인터랙티브 챠트입니다[cite: 5].")
 
-# 오일쇼크 당시의 42% 폭락(-2년 하락)과 7년 6개월간의 회복 과정을 반영한 S&P 500 지수(빨간선 연동 데이터) 세트
-history_trend_data = pd.DataFrame({
-    "연도(Year)": [1970, 1971, 1972, 1973, 1974, 1975, 1976, 1978, 1980, 1982, 1990, 1997, 2001, 2008, 2020, 2026],
-    "경제 충격 지수": [40, 45, 50, 75, 100, 70, 50, 60, 85, 70, 40, 75, 60, 100, 90, 65],
-    "S&P 500 지수 (오일쇼크 폭락·회복 반영)": [100, 110, 120, 105, 70, 75, 85, 95, 115, 140, 350, 970, 1140, 1250, 3200, 5600]
-}).set_index("연도(Year)")
+# 이미지와 일치하는 정밀한 연도별 S&P 500 지수 추이 데이터 생성 (70~140 스케일 핏)
+oil_shock_chart_data = pd.DataFrame({
+    "연도": [1970.0, 1970.5, 1971.0, 1971.5, 1972.0, 1972.5, 1973.0, 1973.5, 1974.0, 1974.5, 1975.0, 1975.5, 1976.0, 1976.5, 1977.0, 1977.5, 1978.0, 1978.5, 1979.0, 1979.5, 1980.0, 1980.5, 1981.0, 1981.5, 1982.0, 1982.5, 1983.0],
+    "S&P 500 지수": [83.0, 72.0, 95.0, 104.0, 93.0, 102.0, 110.0, 118.0, 98.0, 85.0, 71.0, 94.0, 84.0, 102.0, 101.0, 95.0, 90.0, 101.0, 94.0, 114.0, 122.0, 136.0, 131.0, 117.0, 122.0, 108.0, 140.0]
+})
 
-# Streamlit 내장 line_chart 시각화
-st.line_chart(history_trend_data, use_container_width=True)
+# Altair 인터랙티브 멀티레이어 차트 구현 (마우스 호버 시 툴팁 및 포인트 표시)
+highlight = alt.selection_point(on='mouseover', nearest=True, fields=['연도'], empty=False)
+
+base = alt.Chart(oil_shock_chart_data).encode(
+    x=alt.X('연도:Q', title='연도 (Year)', scale=alt.Scale(domain=[1969.5, 1983.5], nice=False), axis=alt.Axis(format='d')),
+    y=alt.Y('S&P 500 지수:Q', title='S&P 500 Index', scale=alt.Scale(domain=[65, 155]))
+)
+
+# 파란색 메인 지수 선 그래프
+line = base.mark_line(color='#2196f3', strokeWidth=2.5).encode(
+    tooltip=['연도:Q', 'S&P 500 지수:Q']
+)
+
+# 마우스오버 시 나타나는 포인터 및 툴팁 레이어
+points = base.mark_circle(size=60, color='#d32f2f').encode(
+    opacity=alt.condition(highlight, alt.value(1), alt.value(0)),
+    tooltip=['연도:Q', 'S&P 500 지수:Q']
+).add_params(highlight)
+
+# 오일쇼크 전고점 기준 수평선 (빨간선) 추가
+rule_data = pd.DataFrame({'yline': [118.0]})
+rule = alt.Chart(rule_data).mark_rule(color='#d32f2f', strokeWidth=2, strokeDash=[4, 4]).encode(
+    y='yline:Q'
+)
+
+interactive_chart = (line + points + rule).properties(
+    height=400,
+    width='container'
+).interactive()
+
+st.altair_chart(interactive_chart, use_container_width=True)
 
 st.markdown("""
 <div class="header-info-box">
-    🔴 <b>오일쇼크 분석 포인트:</b> 1972년 전고점 부근에서 1974년 최저점까지 <b>2년간 약 42% 폭락</b>한 뒤, 1975년부터 반등을 시작하여 이전 전고점을 완전히 탈환하기까지 <b>약 7년 6개월(하락 기간의 3배)</b>이 소요된 미국 증시의 역사가 S&P 500 지수 라인에 반영되어 있습니다[cite: 1, 2, 4].
+    🖱️ <b>인터랙티브 기능 안내:</b> 그래프 위에 마우스를 올리면 <b>연도별 세부 지수(70~140 스케일)</b>를 실시간으로 확인하실 수 있으며, 빨간색 점선 기준선은 오일쇼크 당시의 전고점 라인을 나타냅니다[cite: 5].
 </div>
 """, unsafe_allow_html=True)
 

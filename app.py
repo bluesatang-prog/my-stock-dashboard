@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
-st.markdown("미국 국채금리, 환율, 변동성지수, 주요 증시 및 경제 지표를 한눈에 모니터링합니다.")
+st.markdown("미국 국채금리, 환율, 변동성지수, 반도체, 전력 인프라 및 주요 경제 지표를 모니터링합니다.")
 
 # 2. 안전한 데이터 수집 함수
 @st.cache_data(ttl=600)
@@ -24,12 +24,11 @@ def get_market_data():
         "VIX 변동성지수": "^VIX",
         "S&P 500": "^GSPC",
         "나스닥 종합": "^IXIC",
-        "금 시세 (Gold)": "GC=F"
+        "금 시세 (Gold)": "GC=F",
         "필라델피아 반도체": "^SOX",
         "엔비디아": "NVDA",
-        "전력 인프라 (XLU)": "XLU",
-        "구리 시세": "HG=F"
-   }
+        "전력 인프라 (XLU)": "XLU"
+    }
     
     data = {}
     for name, ticker in tickers.items():
@@ -67,12 +66,11 @@ with col1:
     st.metric("미국 10년물 국채금리", f"{data['미국 10년물 금리']['price']:.3f}%", f"{data['미국 10년물 금리']['change']:.2f}%")
 
 with col2:
-    st.metric("미국 30년물 국채금리", f"{data['미국 30년물 금리']['price']:.3f}%", f"{data['미국 30년물 금리']['change']:.2f}%")
-    spread = data['미국 10년물 금리']['price'] - data['미국 2년물 금리']['price']
-    st.metric("장단기 금리차 (10Y-2Y)", f"{spread:.3f}%p", delta_color="off")
+    st.metric("필라델피아 반도체", f"{data['필라델피아 반도체']['price']:,.2f}", f"{data['필라델피아 반도체']['change']:.2f}%")
+    st.metric("엔비디아 (NVDA)", f"{data['엔비디아']['price']:,.2f}", f"{data['엔비디아']['change']:.2f}%")
 
 with col3:
-    st.metric("달러 인덱스 (DXY)", f"{data['달러 인덱스']['price']:.2f}", f"{data['달러 인덱스']['change']:.2f}%")
+    st.metric("전력 인프라 (XLU)", f"{data['전력 인프라 (XLU)']['price']:,.2f}", f"{data['전력 인프라 (XLU)']['change']:.2f}%")
     st.metric("VIX 변동성지수", f"{data['VIX 변동성지수']['price']:.2f}", f"{data['VIX 변동성지수']['change']:.2f}%")
 
 with col4:
@@ -88,7 +86,7 @@ with col_left:
     st.subheader("📈 주요 지수 추이 비교 (최근 6개월)")
     chart_option = st.selectbox(
         "조회할 자산을 선택하세요",
-        ["S&P 500 & 나스닥", "미국 국채금리 (10Y, 30Y)", "VIX 변동성지수", "금 시세"]
+        ["S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세"]
     )
     
     try:
@@ -96,13 +94,17 @@ with col_left:
             df_chart = yf.download(["^GSPC", "^IXIC"], period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame):
                 st.line_chart(df_chart)
+        elif chart_option == "반도체 (^SOX & NVDA)":
+            df_chart = yf.download(["^SOX", "NVDA"], period="6mo", progress=False)['Close']
+            if isinstance(df_chart, pd.DataFrame):
+                st.line_chart(df_chart)
+        elif chart_option == "전력 인프라 (XLU)":
+            df_chart = yf.download("XLU", period="6mo", progress=False)['Close']
+            st.line_chart(df_chart)
         elif chart_option == "미국 국채금리 (10Y, 30Y)":
             df_chart = yf.download(["^TNX", "^TYX"], period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame):
                 st.line_chart(df_chart)
-        elif chart_option == "VIX 변동성지수":
-            df_chart = yf.download("^VIX", period="6mo", progress=False)['Close']
-            st.line_chart(df_chart)
         elif chart_option == "금 시세":
             df_chart = yf.download("GC=F", period="6mo", progress=False)['Close']
             st.line_chart(df_chart)
@@ -111,8 +113,6 @@ with col_left:
 
 with col_right:
     st.subheader("📅 이번 주 주요 경제 일정")
-    
-    # 연도, 날짜, 요일을 포함한 경제 일정 데이터 생성
     schedule_data = {
         "날짜": ["2026-09-16 (수)", "2026-09-17 (목)", "2026-09-18 (금)", "2026-09-21 (월)"],
         "이벤트": ["미국 CPI 발표", "미국 신규 실업수당", "미국 PCE 물가", "FOMC 회의 결과"],

@@ -10,10 +10,46 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
-st.markdown("미국 국채금리, 환율, 변동성지수, 반도체, 전력 인프라 및 주요 경제 지표를 모니터링합니다.")
+# 2. 커스텀 CSS (카드 디자인 및 색상 설정)
+st.markdown("""
+<style>
+.metric-card {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.metric-title {
+    font-size: 15px;
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.metric-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 6px;
+}
+.metric-change-up {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e03131; /* 상승 빨간색 */
+}
+.metric-change-down {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1971c2; /* 하락 파란색 */
+}
+</style>
+""", unsafe_allow_html=True)
 
-# 2. 안전한 데이터 수집 함수
+st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
+st.markdown("미국 국채금리, 반도체, 전력 인프라 및 주요 경제 지표를 모니터링합니다.")
+
+# 3. 데이터 수집 함수
 @st.cache_data(ttl=600)
 def get_market_data():
     tickers = {
@@ -38,48 +74,71 @@ def get_market_data():
             if not hist.empty and len(hist) >= 2:
                 latest = float(hist['Close'].iloc[-1])
                 prev = float(hist['Close'].iloc[-2])
-                change = ((latest - prev) / prev) * 100
-                data[name] = {"price": latest, "change": change}
+                change = latest - prev
+                change_pct = (change / prev) * 100
+                data[name] = {"price": latest, "change": change, "change_pct": change_pct}
             elif not hist.empty:
                 latest = float(hist['Close'].iloc[-1])
-                data[name] = {"price": latest, "change": 0.0}
+                data[name] = {"price": latest, "change": 0.0, "change_pct": 0.0}
             else:
-                data[name] = {"price": 0.0, "change": 0.0}
+                data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
         except Exception:
-            data[name] = {"price": 0.0, "change": 0.0}
+            data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
             
     if data["미국 2년물 금리"]["price"] == 0:
         data["미국 2년물 금리"]["price"] = 4.25
         
     return data
 
-with st.spinner("실시간 시장 데이터를 불러오는 중입니다... 잠시만 기다려주세요."):
+with st.spinner("실시간 시장 데이터를 불러오는 중입니다..."):
     data = get_market_data()
 
-# 3. 주요 지표 카드 섹션
+# HTML 카드 렌더링 헬퍼 함수
+def render_card(title, price_val, change_val, change_pct_val, is_rate=False):
+    if change_val >= 0:
+        sign = "▲"
+        change_class = "metric-change-up"
+        formatted_change = f"+{change_val:,.2f} (+{change_pct_val:.2f}%)" if not is_rate else f"+{change_val:.3f}% (+{change_pct_val:.2f}%)"
+    else:
+        sign = "▼"
+        change_class = "metric-change-down"
+        formatted_change = f"{change_val:,.2f} ({change_pct_val:.2f}%)" if not is_rate else f"{change_val:.3f}% ({change_pct_val:.2f}%)"
+        
+    price_str = f"{price_val:.3f}%" if is_rate else f"{price_val:,.2f}"
+    
+    html_code = f"""
+    <div class="metric-card">
+        <div class="metric-title">🇺🇸 {title}</div>
+        <div class="metric-value">{price_str}</div>
+        <div class="{change_class}">{sign} {formatted_change}</div>
+    </div>
+    """
+    st.markdown(html_code, unsafe_allow_html=True)
+
+# 4. 주요 지표 카드 섹션 (4열 레이아웃)
 st.subheader("📌 주요 거시경제 및 시장 지표 요약")
 
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric("미국 단기금리 (3M/2Y)", f"{data['미국 2년물 금리']['price']:.3f}%", f"{data['미국 2년물 금리']['change']:.2f}%")
-    st.metric("미국 10년물 국채금리", f"{data['미국 10년물 금리']['price']:.3f}%", f"{data['미국 10년물 금리']['change']:.2f}%")
+    render_card("미국 2년물 금리", data["미국 2년물 금리"]["price"], data["미국 2년물 금리"]["change"], data["미국 2년물 금리"]["change_pct"], is_rate=True)
+    render_card("미국 10년물 금리", data["미국 10년물 금리"]["price"], data["미국 10년물 금리"]["change"], data["미국 10년물 금리"]["change_pct"], is_rate=True)
 
 with col2:
-    st.metric("필라델피아 반도체", f"{data['필라델피아 반도체']['price']:,.2f}", f"{data['필라델피아 반도체']['change']:.2f}%")
-    st.metric("엔비디아 (NVDA)", f"{data['엔비디아']['price']:,.2f}", f"{data['엔비디아']['change']:.2f}%")
+    render_card("필라델피아 반도체", data["필라델피아 반도체"]["price"], data["필라델피아 반도체"]["change"], data["필라델피아 반도체"]["change_pct"])
+    render_card("엔비디아 (NVDA)", data["엔비디아"]["price"], data["엔비디아"]["change"], data["엔비디아"]["change_pct"])
 
 with col3:
-    st.metric("전력 인프라 (XLU)", f"{data['전력 인프라 (XLU)']['price']:,.2f}", f"{data['전력 인프라 (XLU)']['change']:.2f}%")
-    st.metric("VIX 변동성지수", f"{data['VIX 변동성지수']['price']:.2f}", f"{data['VIX 변동성지수']['change']:.2f}%")
+    render_card("전력 인프라 (XLU)", data["전력 인프라 (XLU)"]["price"], data["전력 인프라 (XLU)"]["change"], data["전력 인프라 (XLU)"]["change_pct"])
+    render_card("VIX 변동성지수", data["VIX 변동성지수"]["price"], data["VIX 변동성지수"]["change"], data["VIX 변동성지수"]["change_pct"])
 
 with col4:
-    st.metric("S&P 500", f"{data['S&P 500']['price']:,.2f}", f"{data['S&P 500']['change']:.2f}%")
-    st.metric("나스닥 종합", f"{data['나스닥 종합']['price']:,.2f}", f"{data['나스닥 종합']['change']:.2f}%")
+    render_card("S&P 500", data["S&P 500"]["price"], data["S&P 500"]["change"], data["S&P 500"]["change_pct"])
+    render_card("나스닥 종합", data["나스닥 종합"]["price"], data["나스닥 종합"]["change"], data["나스닥 종합"]["change_pct"])
 
 st.divider()
 
-# 4. 차트 및 경제 일정 섹션
+# 5. 차트 및 경제 일정 섹션
 col_left, col_right = st.columns([2, 1])
 
 with col_left:

@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. 커스텀 CSS (카드 디자인 및 색상 설정)
+# 2. 커스텀 CSS (카드 디자인 및 상단 정렬 스타일)
 st.markdown("""
 <style>
 .metric-card {
@@ -44,10 +44,32 @@ st.markdown("""
     font-weight: 600;
     color: #1971c2; /* 하락 파란색 */
 }
+.header-info-box {
+    background-color: #f1f3f5;
+    border-left: 4px solid #339af0;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #495057;
+    margin-top: 15px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
+# 타이틀과 빈 공간(우측) 배치
+col_title, col_info = st.columns([3, 2])
+
+with col_title:
+    st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
+
+with col_info:
+    st.markdown("""
+    <div class="header-info-box">
+        💡 <b>정보 업데이트 안내</b><br>
+        • 데이터는 <b>10분 단위(캐시)</b>로 관리됩니다.<br>
+        • 새로고침(F5) 또는 옵션 변경 시 최신 데이터로 갱신됩니다.
+    </div>
+    """, unsafe_allow_html=True)
 
 # 한국 기준 현재 시간 계산 (년-월-일 시:분:초)
 kst = pytz.timezone('Asia/Seoul')

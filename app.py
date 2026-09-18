@@ -321,42 +321,59 @@ with col_right:
 
 st.divider()
 
-# 7. 역사적 거시경제 위기 타임라인 & S&P 500 오일쇼크 폭락/회복 비교 (Altair 인터랙티브 차트 적용)
-st.subheader("📉 역사적 거시경제 위기 사이클 & S&P 500 오일쇼크 폭락/회복 비교")
-st.markdown("1970년대 오일쇼크 당시 S&P 500 지수 스케일(`70 ~ 150`)와 마우스 오버 시 수치 확인이 가능한 인터랙티브 챠트입니다[cite: 5].")
+# 7. 역사적 거시경제 위기 타임라인 & 오일쇼크 네모점(마커) 및 2026년 확장 인터랙티브 차트
+st.subheader("📉 역사적 오일쇼크 및 거시경제 위기 사이클 인터랙티브 차트 (2026년 기준 확장)")
+st.markdown("1차·2차 오일쇼크와 주요 위기 변곡점을 **네모점(사각형 마커)**으로 표시하였으며, 마우스 오버 시 연도별 상세 수치를 확인하실 수 있습니다[cite: 5].")
 
-# 이미지와 일치하는 정밀한 연도별 S&P 500 지수 추이 데이터 생성 (70~140 스케일 핏)
+# 2026년까지의 흐름을 반영한 역사적 지수 및 주요 위기 데이터 구성
 oil_shock_chart_data = pd.DataFrame({
-    "연도": [1970.0, 1970.5, 1971.0, 1971.5, 1972.0, 1972.5, 1973.0, 1973.5, 1974.0, 1974.5, 1975.0, 1975.5, 1976.0, 1976.5, 1977.0, 1977.5, 1978.0, 1978.5, 1979.0, 1979.5, 1980.0, 1980.5, 1981.0, 1981.5, 1982.0, 1982.5, 1983.0],
-    "S&P 500 지수": [83.0, 72.0, 95.0, 104.0, 93.0, 102.0, 110.0, 118.0, 98.0, 85.0, 71.0, 94.0, 84.0, 102.0, 101.0, 95.0, 90.0, 101.0, 94.0, 114.0, 122.0, 136.0, 131.0, 117.0, 122.0, 108.0, 140.0]
+    "연도": [1970.0, 1973.0, 1975.0, 1979.0, 1985.0, 1990.0, 1997.0, 2000.0, 2008.0, 2020.0, 2022.0, 2026.0],
+    "지수": [83.0, 110.0, 71.0, 114.0, 95.0, 105.0, 92.0, 120.0, 75.0, 80.0, 100.0, 115.0],
+    "이벤트명": [
+        "일반 장세", 
+        "🔥 제1차 오일쇼크 (1973)", 
+        "바닥 및 회복기", 
+        "🔥 제2차 오일쇼크 (1979)", 
+        "안정기", 
+        "걸프전/경기둔화", 
+        "아시아 외환위기 (1997)", 
+        "닷컴버블 (2000)", 
+        "글로벌 금융위기 (2008)", 
+        "코로나19 충격 (2020)", 
+        "🔥 인플레이션/에너지 위기 (2022)", 
+        "2026년 현재 시장"
+    ],
+    "마커스타일": ["circle", "square", "circle", "square", "circle", "circle", "square", "square", "square", "square", "square", "circle"]
 })
 
-# Altair 인터랙티브 멀티레이어 차트 구현 (마우스 호버 시 툴팁 및 포인트 표시)
+# Altair 인터랙티브 차트 구현
+base = alt.Chart(oil_shock_chart_data).encode(
+    x=alt.X('연도:Q', title='연도 (Year)', scale=alt.Scale(domain=[1968, 2028], nice=False), axis=alt.Axis(format='d')),
+    y=alt.Y('지수:Q', title='시장 지수 스케일', scale=alt.Scale(domain=[60, 145]))
+)
+
+# 메인 트렌드 라인
+line = base.mark_line(color='#2196f3', strokeWidth=2.5)
+
+# 일반 동그라미 포인트
+normal_points = base.transform_filter(
+    alt.datum.마커스타일 == 'circle'
+).mark_circle(size=70, color='#2196f3')
+
+# 오일쇼크 및 주요 위기 강조 네모점 (Square marker)
+shock_points = base.transform_filter(
+    alt.datum.마커스타일 == 'square'
+).mark_square(size=140, color='#d32f2f')
+
+# 마우스 호버 시 툴팁 및 포인트 하이라이트
 highlight = alt.selection_point(on='mouseover', nearest=True, fields=['연도'], empty=False)
 
-base = alt.Chart(oil_shock_chart_data).encode(
-    x=alt.X('연도:Q', title='연도 (Year)', scale=alt.Scale(domain=[1969.5, 1983.5], nice=False), axis=alt.Axis(format='d')),
-    y=alt.Y('S&P 500 지수:Q', title='S&P 500 Index', scale=alt.Scale(domain=[65, 155]))
-)
-
-# 파란색 메인 지수 선 그래프
-line = base.mark_line(color='#2196f3', strokeWidth=2.5).encode(
-    tooltip=['연도:Q', 'S&P 500 지수:Q']
-)
-
-# 마우스오버 시 나타나는 포인터 및 툴팁 레이어
-points = base.mark_circle(size=60, color='#d32f2f').encode(
+hover_points = base.mark_circle(size=160, color='#ff8f00').encode(
     opacity=alt.condition(highlight, alt.value(1), alt.value(0)),
-    tooltip=['연도:Q', 'S&P 500 지수:Q']
+    tooltip=['연도:Q', '지수:Q', '이벤트명:N']
 ).add_params(highlight)
 
-# 오일쇼크 전고점 기준 수평선 (빨간선) 추가
-rule_data = pd.DataFrame({'yline': [118.0]})
-rule = alt.Chart(rule_data).mark_rule(color='#d32f2f', strokeWidth=2, strokeDash=[4, 4]).encode(
-    y='yline:Q'
-)
-
-interactive_chart = (line + points + rule).properties(
+interactive_chart = (line + normal_points + shock_points + hover_points).properties(
     height=400,
     width='container'
 ).interactive()
@@ -365,7 +382,7 @@ st.altair_chart(interactive_chart, use_container_width=True)
 
 st.markdown("""
 <div class="header-info-box">
-    🖱️ <b>인터랙티브 기능 안내:</b> 그래프 위에 마우스를 올리면 <b>연도별 세부 지수(70~140 스케일)</b>를 실시간으로 확인하실 수 있으며, 빨간색 점선 기준선은 오일쇼크 당시의 전고점 라인을 나타냅니다[cite: 5].
+    🖱️ <b>그래프 읽는 법:</b> 빨간색 <b>네모점(■)</b>은 <b>제1차·2차 오일쇼크 및 주요 글로벌 경제 위기(외환위기, 닷컴버블, 금융위기, 2022 에너지 위기)</b> 시점을 나타내며, 마우스 오버 시 상세 이벤트와 지수 수치를 확인하실 수 있습니다[cite: 5].
 </div>
 """, unsafe_allow_html=True)
 
@@ -378,9 +395,9 @@ with col_h1:
         <div class="history-period">1970년대 ~ 1980년대</div>
         <div class="history-title">오일쇼크와 스태그플레이션 (42% 폭락장)</div>
         <div class="history-desc">
-            • <b>1972년 ~ 1974년:</b> 1차 오일쇼크 발생 후 S&P 500 전고점 대비 <b>42% 폭락</b> (하락 기간 2년)[cite: 1, 2, 4]<br>
-            • <b>1975년 ~ 1982년:</b> 증시가 반등을 시작했으나 전고점 회복까지 <b>7년 6개월(하락의 3배)</b> 소요[cite: 1, 2, 4]<br>
-            • <b>특징:</b> 극심한 스태그플레이션과 긴 회복 지연 기간 증명
+            • <b>1973년 (제1차 오일쇼크):</b> 아랍 산유국 감산 조치로 유가 폭등 및 증시 충격[cite: 1, 2, 4]<br>
+            • <b>1979년 (제2차 오일쇼크):</b> 이란 혁명 등으로 두 번째 유가 쇼크 및 스태그플레이션 심화[cite: 1, 2, 4]<br>
+            • <b>특징:</b> 극심한 물가 상승과 경기 침체의 동시 발생
         </div>
     </div>
     
@@ -415,20 +432,19 @@ with col_h2:
     </div>
     
     <div class="history-card">
-        <div class="history-period">2020년</div>
-        <div class="history-title">코로나19 팬데믹 충격</div>
+        <div class="history-period">2020년 ~ 2022년</div>
+        <div class="history-title">팬데믹 및 2022년 에너지·인플레이션 위기</div>
         <div class="history-desc">
-            • <b>발생 원인:</b> 감염병 확산에 따른 글로벌 경제 활동 전면 봉쇄<br>
-            • <b>특징:</b> 사상 유례없는 급락 후, 각국의 막대한 유동성 공급으로 빠르게 반등했으나 이후 인플레이션 압력 증대[cite: 1, 2, 3]
+            • <b>2020년:</b> 코로나19 팬데믹 충격 및 대규모 유동성 공급[cite: 1, 2, 3]<br>
+            • <b>2022년:</b> 지정학 리스크 및 공급망 충격으로 인한 글로벌 에너지 가격 급등
         </div>
     </div>
     
     <div class="history-card">
-        <div class="history-period">2022년 ~ 2026년 현재</div>
-        <div class="history-title">인플레이션과 고금리, 에너지·지정학 리스크</div>
+        <div class="history-period">2024년 ~ 2026년 현재</div>
+        <div class="history-title">공급망 재편과 신냉전 시대</div>
         <div class="history-desc">
-            • <b>2022년 ~ 2023년:</b> 유동성과 공급망 차질로 인한 '고물가·고금리' 시대 도래<br>
-            • <b>2024년 ~ 2026년 현재:</b> 글로벌 공급망 재편 및 중동 등 지정학적 리스크 상존하며 변동성 지속
+            • <b>2026년 현재:</b> 반도체·전력 인프라 중심의 신산업 재편과 구조적 변동성 지속 관리 구간
         </div>
     </div>
     """, unsafe_allow_html=True)

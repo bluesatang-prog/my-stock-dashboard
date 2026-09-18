@@ -320,24 +320,24 @@ with col_right:
 
 st.divider()
 
-# 7. [신규 추가] 역사적 거시경제 위기 및 흐름 타임라인 그래프 섹션
+# 7. 역사적 거시경제 위기 및 사이클 타임라인 그래프 섹션 (X축: 연도)
 st.subheader("📉 역사적 거시경제 위기 및 사이클 타임라인")
-st.markdown("1970년대부터 현재까지 글로벌 경제를 흔들었던 주요 위기와 구조적 변화를 타임라인 그래프와 카드 형태로 시각화한 데이터입니다.")
+st.markdown("1970년대부터 현재까지 글로벌 경제를 흔들었던 주요 위기와 구조적 변화를 연도별 타임라인 그래프와 카드 형태로 시각화한 데이터입니다.")
 
-# 타임라인 그래프용 데이터 준비
+# 타임라인 그래프용 데이터 준비 (x축 컬럼을 '연도(Year)'로 설정)
 history_chart_data = pd.DataFrame([
-    {"Year": 1975, "Event": "1차/2차 오일쇼크 & 스태그플레이션", "Impact": 8, "Category": "에너지 위기"},
-    {"Year": 1998, "Event": "아시아 외환위기 (한국 IMF)", "Impact": 7, "Category": "신흥국 위기"},
-    {"Year": 2001, "Event": "닷컴버블 붕괴", "Impact": 6, "Category": "자산 거품"},
-    {"Year": 2008, "Event": "글로벌 금융위기 (서브프라임)", "Impact": 10, "Category": "금융 시스템 위기"},
-    {"Year": 2020, "Event": "코로나19 팬데믹 충격", "Impact": 9, "Category": "팬데믹"},
-    {"Year": 2024, "Event": "고물가·고금리 및 지정학 리스크", "Impact": 7, "Category": "인플레이션"}
+    {"연도(Year)": 1975, "Event": "1차/2차 오일쇼크 & 스태그플레이션", "Impact": 8, "Category": "에너지 위기"},
+    {"연도(Year)": 1998, "Event": "아시아 외환위기 (한국 IMF)", "Impact": 7, "Category": "신흥국 위기"},
+    {"연도(Year)": 2001, "Event": "닷컴버블 붕괴", "Impact": 6, "Category": "자산 거품"},
+    {"연도(Year)": 2008, "Event": "글로벌 금융위기 (서브프라임)", "Impact": 10, "Category": "금융 시스템 위기"},
+    {"연도(Year)": 2020, "Event": "코로나19 팬데믹 충격", "Impact": 9, "Category": "팬데믹"},
+    {"연도(Year)": 2024, "Event": "고물가·고금리 및 지정학 리스크", "Impact": 7, "Category": "인플레이션"}
 ])
 
-# Streamlit 내장 산점도(Scatter/Line) 그래프를 활용한 시각적 타임라인 구현
+# Streamlit 산점도 그래프 (X축을 '연도(Year)'로 지정)
 st.scatter_chart(
     history_chart_data,
-    x="Year",
+    x="연도(Year)",
     y="Impact",
     size="Impact",
     color="Category",

@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 import pytz
 
-# 1. 페이지 레이아웃 설정 (페이지 아이콘을 대한민국 국기 🇰🇷로 설정)
+# 1. 페이지 레이아웃 설정 (브라우저 탭 아이콘을 대한민국 국기 🇰🇷로 설정)
 st.set_page_config(
     page_title="글로벌 매크로 및 시장 대시보드",
     page_icon="🇰🇷",
@@ -86,11 +86,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀과 빈 공간(우측) 배치
+# 타이틀과 빈 공간(우측) 배치 (타이틀 앞에 태극기 🇰🇷 직접 추가)
 col_title, col_info = st.columns([3, 2])
 
 with col_title:
-    st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
+    st.title("🇰🇷 글로벌 거시경제 & 주식 시장 대시보드")
 
 with col_info:
     st.markdown("""
@@ -276,13 +276,6 @@ archived_news = [
         "url": "https://economist.co.kr/article/view/ecn202609030021",
         "date": "2026.09.03 08:45"
     }
-    # 💡 6번째 이후 기사들도 여기에 아래 형식으로 계속 추가하시면 5개씩 자동 정렬됩니다!
-    # {
-    #     "category": "카테고리명",
-    #     "title": "기사 제목",
-    #     "url": "기사 링크",
-    #     "date": "YYYY.MM.DD HH:MM"
-    # }
 ]
 
 st.subheader("📰 이코노미스트 | 반도체 & 전력 인프라 핵심 리포트 아카이브")

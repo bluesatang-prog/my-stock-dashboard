@@ -4,10 +4,10 @@ import pandas as pd
 import datetime
 import pytz
 
-# 1. 페이지 레이아웃 설정
+# 1. 페이지 레이아웃 설정 (페이지 아이콘을 대한민국 국기 🇰🇷로 설정)
 st.set_page_config(
     page_title="글로벌 매크로 및 시장 대시보드",
-    page_icon="📊",
+    page_icon="🇰🇷",
     layout="wide"
 )
 
@@ -244,7 +244,7 @@ st.markdown(f"**💰 현재 금 시세 (Gold Futures):** `${data['금 시세 (Go
 
 st.divider()
 
-# 6. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리 (10개 이상으로 늘어나도 행바꿈 처리됨)
+# 6. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
 archived_news = [
     {
         "category": "📈 반도체 / 전력",
@@ -276,7 +276,7 @@ archived_news = [
         "url": "https://economist.co.kr/article/view/ecn202609030021",
         "date": "2026.09.03 08:45"
     }
-    # 💡 6번째 이후 기사들도 여기에 아래 형식으로 계속 추가하시면 됩니다!
+    # 💡 6번째 이후 기사들도 여기에 아래 형식으로 계속 추가하시면 5개씩 자동 정렬됩니다!
     # {
     #     "category": "카테고리명",
     #     "title": "기사 제목",

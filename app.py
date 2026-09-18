@@ -2,6 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import datetime
+import pytz
 
 # 1. 페이지 레이아웃 설정
 st.set_page_config(
@@ -47,7 +48,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
-st.markdown("미국 국채금리, 반도체, 전력 인프라 및 주요 경제 지표를 모니터링합니다.")
+
+# 한국 기준 현재 시간 계산 (년-월-일 시:분:초)
+kst = pytz.timezone('Asia/Seoul')
+now_kst = datetime.datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
+
+st.markdown(f"미국 국채금리, 반도체, 전력 인프라 및 주요 경제 지표를 모니터링합니다. &nbsp;&nbsp;|&nbsp;&nbsp; 🕒 **기준 시간:** {now_kst} (한국 기준)")
 
 # 3. 데이터 수집 함수
 @st.cache_data(ttl=600)

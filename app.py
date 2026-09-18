@@ -78,6 +78,35 @@ st.markdown("""
     color: #0277bd; /* 하락 파란색 */
 }
 
+/* 역사적 위기 타임라인 카드 스타일 */
+.history-card {
+    background-color: #ffffff;
+    border: 1px solid #e6ded6;
+    border-left: 4px solid #ff8f00;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.history-period {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e65100;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.history-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2b1d14;
+    margin-bottom: 8px;
+}
+.history-desc {
+    font-size: 13px;
+    color: #4e342e;
+    line-height: 1.5;
+}
+
 /* 정보 안내 박스 */
 .header-info-box {
     background-color: #fbe9e7;
@@ -237,7 +266,6 @@ with col3:
 
 with col4:
     render_card("S&P 500", data["S&P 500"]["price"], data["S&P 500"]["change"], data["S&P 500"]["change_pct"])
-    # 기존 단독 텍스트였던 금 시세를 카드 형태로 4열 상단 요약에 편입
     render_card("금 시세 (Gold)", data["금 시세 (Gold)"]["price"], data["금 시세 (Gold)"]["change"], data["금 시세 (Gold)"]["change_pct"], prefix="🪙 ")
 
 st.divider()
@@ -292,7 +320,97 @@ with col_right:
 
 st.divider()
 
-# 7. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
+# 7. [신규 추가] 역사적 거시경제 위기 및 흐름 타임라인 그래프 섹션
+st.subheader("📉 역사적 거시경제 위기 및 사이클 타임라인")
+st.markdown("1970년대부터 현재까지 글로벌 경제를 흔들었던 주요 위기와 구조적 변화를 타임라인 그래프와 카드 형태로 시각화한 데이터입니다.")
+
+# 타임라인 그래프용 데이터 준비
+history_chart_data = pd.DataFrame([
+    {"Year": 1975, "Event": "1차/2차 오일쇼크 & 스태그플레이션", "Impact": 8, "Category": "에너지 위기"},
+    {"Year": 1998, "Event": "아시아 외환위기 (한국 IMF)", "Impact": 7, "Category": "신흥국 위기"},
+    {"Year": 2001, "Event": "닷컴버블 붕괴", "Impact": 6, "Category": "자산 거품"},
+    {"Year": 2008, "Event": "글로벌 금융위기 (서브프라임)", "Impact": 10, "Category": "금융 시스템 위기"},
+    {"Year": 2020, "Event": "코로나19 팬데믹 충격", "Impact": 9, "Category": "팬데믹"},
+    {"Year": 2024, "Event": "고물가·고금리 및 지정학 리스크", "Impact": 7, "Category": "인플레이션"}
+])
+
+# Streamlit 내장 산점도(Scatter/Line) 그래프를 활용한 시각적 타임라인 구현
+st.scatter_chart(
+    history_chart_data,
+    x="Year",
+    y="Impact",
+    size="Impact",
+    color="Category",
+    use_container_width=True
+)
+
+# 상세 내용 카드 그리드 배치 (2열)
+col_h1, col_h2 = st.columns(2)
+
+with col_h1:
+    st.markdown("""
+    <div class="history-card">
+        <div class="history-period">1970년대 ~ 1980년대</div>
+        <div class="history-title">오일쇼크와 스태그플레이션</div>
+        <div class="history-desc">
+            • <b>1973년 (1차 오일쇼크):</b> 중동전쟁으로 원유 공급이 막히며 유가 폭등[cite: 1, 2]<br>
+            • <b>1978년 (2차 오일쇼크):</b> 이란 혁명으로 다시 한번 유가 급등[cite: 1]<br>
+            • <b>특징:</b> 물가가 오르는데 경기는 침체되는 '스태그플레이션' 발생
+        </div>
+    </div>
+    
+    <div class="history-card">
+        <div class="history-period">1990년대 말</div>
+        <div class="history-title">아시아 외환위기와 신흥국 위기</div>
+        <div class="history-desc">
+            • <b>1997년 (한국 IMF 외환위기):</b> 단기 외채 급증과 외화 부족으로 국가 부도 위기 처함[cite: 1, 2]<br>
+            • <b>특징:</b> 아시아 신흥국 중심의 대규모 구조조정과 구제금융 단행
+        </div>
+    </div>
+    
+    <div class="history-card">
+        <div class="history-period">2000년대 초반</div>
+        <div class="history-title">닷컴버블 붕괴</div>
+        <div class="history-desc">
+            • <b>2000년 ~ 2002년:</b> 인터넷(IT) 기업에 대한 과도한 기대와 투자가 붕괴[cite: 1]<br>
+            • <b>특징:</b> 기술주 중심의 나스닥 폭락 및 거품 소멸[cite: 1]
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_h2:
+    st.markdown("""
+    <div class="history-card">
+        <div class="history-period">2008년</div>
+        <div class="history-title">글로벌 금융위기 (서브프라임 모기지)</div>
+        <div class="history-desc">
+            • <b>발생 원인:</b> 미국의 저신용자 주택담보대출(서브프라임) 부실화[cite: 1, 2]<br>
+            • <b>특징:</b> 리먼 브라더스 파산 등 금융 시스템 마비와 전 세계적 경기 침체[cite: 1]
+        </div>
+    </div>
+    
+    <div class="history-card">
+        <div class="history-period">2020년</div>
+        <div class="history-title">코로나19 팬데믹 충격</div>
+        <div class="history-desc">
+            • <b>발생 원인:</b> 감염병 확산에 따른 글로벌 경제 활동 전면 봉쇄<br>
+            • <b>특징:</b> 사상 유례없는 급락 후, 각국의 막대한 유동성 공급으로 빠르게 반등했으나 이후 인플레이션 압력 증대[cite: 1, 2, 3]
+        </div>
+    </div>
+    
+    <div class="history-card">
+        <div class="history-period">2022년 ~ 2026년 현재</div>
+        <div class="history-title">인플레이션과 고금리, 에너지·지정학 리스크</div>
+        <div class="history-desc">
+            • <b>2022년 ~ 2023년:</b> 유동성과 공급망 차질로 인한 '고물가·고금리' 시대 도래<br>
+            • <b>2024년 ~ 2026년 현재:</b> 글로벌 공급망 재편 및 중동 등 지정학적 리스크 상존하며 변동성 지속
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# 8. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
 archived_news = [
     {
         "category": "📈 반도체 / 전력",

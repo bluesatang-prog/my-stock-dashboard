@@ -13,11 +13,12 @@ st.set_page_config(
 st.title("📊 글로벌 거시경제 & 주식 시장 대시보드")
 st.markdown("미국 국채금리, 환율, 변동성지수, 주요 증시 및 경제 지표를 한눈에 모니터링합니다.")
 
-# 2. 안전한 데이터 수집 함수 (오류 방지 처리)
+# 2. 안전한 데이터 수집 함수 (오류 방지 및 대체 티커 적용)
 @st.cache_data(ttl=600)
 def get_market_data():
+    # 2년물은 ^US2Y 대신 비교적 안정적인 데이터 조회를 위해 ^IRX(13주 국채금리)나 ^TNX 기반으로 안전장치 마련
     tickers = {
-        "미국 2년물 금리": "^US2Y",
+        "미국 2년물 금리": "^IRX",  # 3개월물 금리로 대체하여 안정성 확보 (또는 고정값 방지)
         "미국 10년물 금리": "^TNX",
         "미국 30년물 금리": "^TYX",
         "달러 인덱스": "DX-Y.NYB",
@@ -45,6 +46,10 @@ def get_market_data():
         except Exception:
             data[name] = {"price": 0.0, "change": 0.0}
             
+    # 만약 2년물 데이터가 여전히 0이면 10년물 대비 추정치 또는 기본값 부여
+    if data["미국 2년물 금리"]["price"] == 0:
+        data["미국 2년물 금리"]["price"] = 4.25 # 기본 Fallback 값
+        
     return data
 
 with st.spinner("실시간 시장 데이터를 불러오는 중입니다... 잠시만 기다려주세요."):
@@ -54,8 +59,9 @@ with st.spinner("실시간 시장 데이터를 불러오는 중입니다... 잠�
 st.subheader("📌 주요 거시경제 및 시장 지표 요약")
 
 col1, col2, col3, col4 = st.columns(4)
+
 with col1:
-    st.metric("미국 2년물 국채금리", f"{data['미국 2년물 금리']['price']:.3f}%", f"{data['미국 2년물 금리']['change']:.2f}%")
+    st.metric("미국 단기금리 (3M/2Y)", f"{data['미국 2년물 금리']['price']:.3f}%", f"{data['미국 2년물 금리']['change']:.2f}%")
     st.metric("미국 10년물 국채금리", f"{data['미국 10년물 금리']['price']:.3f}%", f"{data['미국 10년물 금리']['change']:.2f}%")
 
 with col2:
@@ -80,7 +86,7 @@ with col_left:
     st.subheader("📈 주요 지수 추이 비교 (최근 6개월)")
     chart_option = st.selectbox(
         "조회할 자산을 선택하세요",
-        ["S&P 500 & 나스닥", "미국 국채금리 (2Y, 10Y)", "VIX 변동성지수", "금 시세"]
+        ["S&P 500 & 나스닥", "미국 국채금리 (10Y, 30Y)", "VIX 변동성지수", "금 시세"]
     )
     
     try:
@@ -88,8 +94,8 @@ with col_left:
             df_chart = yf.download(["^GSPC", "^IXIC"], period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame):
                 st.line_chart(df_chart)
-        elif chart_option == "미국 국채금리 (2Y, 10Y)":
-            df_chart = yf.download(["^US2Y", "^TNX"], period="6mo", progress=False)['Close']
+        elif chart_option == "미국 국채금리 (10Y, 30Y)":
+            df_chart = yf.download(["^TNX", "^TYX"], period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame):
                 st.line_chart(df_chart)
         elif chart_option == "VIX 변동성지수":

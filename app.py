@@ -11,103 +11,148 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. 커스텀 CSS (카드 디자인, 뉴스 섹션 및 상단 정렬 스타일)
+# 2. Carestream 감성의 딥 브라운 & 오렌지 커스텀 CSS 테마 적용
 st.markdown("""
 <style>
-.metric-card {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
+/* 전체 배경 및 폰트 톤 핏 */
+.stApp {
+    background-color: #faf9f6;
+}
+
+/* 상단 메인 히어로 배너 스타일 (딥 브라운 그라데이션) */
+.hero-banner {
+    background: linear-gradient(135deg, #2b1d14 0%, #422d20 100%);
+    padding: 35px 40px;
     border-radius: 12px;
+    color: #ffffff;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(43, 29, 20, 0.15);
+}
+.hero-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+.hero-subtitle {
+    font-size: 14px;
+    color: #d7ccc8;
+    line-height: 1.5;
+}
+
+/* 메트릭 카드 스타일 (오렌지 포인트 테두리 및 톤) */
+.metric-card {
+    background-color: #ffffff;
+    border: 1px solid #e6ded6;
+    border-top: 4px solid #e65100; /* 오렌지 포인트 상단 바 */
+    border-radius: 8px;
     padding: 18px;
     margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(230, 81, 0, 0.1);
 }
 .metric-title {
-    font-size: 15px;
-    color: #495057;
+    font-size: 14px;
+    color: #5d4037;
     font-weight: 600;
     margin-bottom: 8px;
 }
 .metric-value {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
-    color: #212529;
+    color: #2b1d14;
     margin-bottom: 6px;
 }
 .metric-change-up {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    color: #e03131; /* 상승 빨간색 */
+    color: #d32f2f; /* 상승 빨간색 */
 }
 .metric-change-down {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    color: #1971c2; /* 하락 파란색 */
+    color: #0277bd; /* 하락 파란색 */
 }
+
+/* 정보 안내 박스 */
 .header-info-box {
-    background-color: #f1f3f5;
-    border-left: 4px solid #339af0;
-    padding: 10px 15px;
+    background-color: #fbe9e7;
+    border-left: 4px solid #e65100;
+    padding: 12px 15px;
     border-radius: 4px;
     font-size: 13px;
-    color: #495057;
-    margin-top: 15px;
+    color: #4e342e;
 }
+
+/* 뉴스 아카이브 카드 스타일 */
 .news-box {
     background-color: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border: 1px solid #e6ded6;
+    border-left: 3px solid #ff8f00;
+    border-radius: 6px;
     padding: 12px;
     margin-bottom: 10px;
-    height: 140px;
+    height: 145px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 .news-category {
     font-size: 11px;
     font-weight: 700;
-    color: #1c7ed6;
+    color: #e65100;
     text-transform: uppercase;
+    margin-bottom: 4px;
 }
 .news-title {
     font-size: 13px;
     font-weight: 600;
-    color: #343a40;
+    color: #2b1d14;
     line-height: 1.3;
+}
+.news-title a {
+    color: #2b1d14;
+    text-decoration: none;
+}
+.news-title a:hover {
+    color: #e65100;
+    text-decoration: underline;
 }
 .news-date {
     font-size: 11px;
-    color: #868e96;
-    border-top: 1px solid #f1f3f5;
+    color: #8d6e63;
+    border-top: 1px solid #efebe9;
     padding-top: 6px;
     margin-top: 6px;
+}
+
+/* 서브헤더 커스텀 컬러링 */
+h2, h3 {
+    color: #2b1d14 !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀과 빈 공간(우측) 배치 (타이틀 앞에 태극기 🇰🇷 직접 추가)
-col_title, col_info = st.columns([3, 2])
-
-with col_title:
-    st.title("🇰🇷 글로벌 거시경제 & 주식 시장 대시보드")
-
-with col_info:
-    st.markdown("""
-    <div class="header-info-box">
-        💡 <b>정보 업데이트 안내</b><br>
-        • 데이터는 <b>10분 단위(캐시)</b>로 관리됩니다.<br>
-        • 새로고침(F5) 또는 옵션 변경 시 최신 데이터로 갱신됩니다.
-    </div>
-    """, unsafe_allow_html=True)
-
-# 한국 기준 현재 시간 계산 (년-월-일 시:분:초)
+# 3. 상단 히어로 배너 영역 (Carestream 딥브라운 톤 적용)
 kst = pytz.timezone('Asia/Seoul')
 now_kst = datetime.datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
 
-st.markdown(f"미국 국채금리, 반도체, 전력 인프라 및 주요 경제 지표를 모니터링합니다. &nbsp;&nbsp;|&nbsp;&nbsp; 🕒 **기준 시간:** {now_kst} (한국 기준)")
+st.markdown(f"""
+<div class="hero-banner">
+    <div class="hero-title">🇰🇷 글로벌 거시경제 & 주식 시장 대시보드</div>
+    <div class="hero-subtitle">
+        미국 국채금리, 반도체, 전력 인프라 및 핵심 경제 지표 실시간 모니터링 시스템<br>
+        🕒 <b>기준 시간:</b> {now_kst} (한국 기준) &nbsp;&nbsp;|&nbsp;&nbsp; 💡 데이터는 10분 단위로 캐시 관리됩니다.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# 3. 데이터 수집 함수
+# 4. 데이터 수집 함수
 @st.cache_data(ttl=600)
 def get_market_data():
     tickers = {
@@ -173,7 +218,7 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False):
     """
     st.markdown(html_code, unsafe_allow_html=True)
 
-# 4. 주요 지표 카드 섹션 (4열 레이아웃)
+# 5. 주요 지표 카드 섹션 (4열 레이아웃)
 st.subheader("📌 주요 거시경제 및 시장 지표 요약")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -196,7 +241,7 @@ with col4:
 
 st.divider()
 
-# 5. 차트 및 경제 일정 섹션
+# 6. 차트 및 경제 일정 섹션
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
@@ -238,13 +283,17 @@ with col_right:
     df_schedule = pd.DataFrame(schedule_data)
     st.table(df_schedule)
     
-    st.info("💡 **팁:** 주요 물가 지표 발표일에는 금리와 VIX 변동성에 유의하세요.")
+    st.markdown("""
+    <div class="header-info-box">
+        💡 <b>Tip:</b> 주요 물가 지표 발표일에는 금리와 VIX 변동성에 유의하세요.
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown(f"**💰 현재 금 시세 (Gold Futures):** `${data['금 시세 (Gold)']['price']:,.2f}`")
 
 st.divider()
 
-# 6. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
+# 7. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
 archived_news = [
     {
         "category": "📈 반도체 / 전력",

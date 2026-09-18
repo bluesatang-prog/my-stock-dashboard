@@ -197,7 +197,7 @@ with st.spinner("실시간 시장 데이터를 불러오는 중입니다..."):
     data = get_market_data()
 
 # HTML 카드 렌더링 헬퍼 함수
-def render_card(title, price_val, change_val, change_pct_val, is_rate=False):
+def render_card(title, price_val, change_val, change_pct_val, is_rate=False, prefix="🇺🇸 "):
     if change_val >= 0:
         sign = "▲"
         change_class = "metric-change-up"
@@ -211,14 +211,14 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False):
     
     html_code = f"""
     <div class="metric-card">
-        <div class="metric-title">🇺🇸 {title}</div>
+        <div class="metric-title">{prefix}{title}</div>
         <div class="metric-value">{price_str}</div>
         <div class="{change_class}">{sign} {formatted_change}</div>
     </div>
     """
     st.markdown(html_code, unsafe_allow_html=True)
 
-# 5. 주요 지표 카드 섹션 (4열 레이아웃)
+# 5. 주요 지표 카드 섹션 (4열 레이아웃 - 금 시세 카드 포함)
 st.subheader("📌 주요 거시경제 및 시장 지표 요약")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -237,7 +237,8 @@ with col3:
 
 with col4:
     render_card("S&P 500", data["S&P 500"]["price"], data["S&P 500"]["change"], data["S&P 500"]["change_pct"])
-    render_card("나스닥 종합", data["나스닥 종합"]["price"], data["나스닥 종합"]["change"], data["나스닥 종합"]["change_pct"])
+    # 기존 단독 텍스트였던 금 시세를 카드 형태로 4열 상단 요약에 편입
+    render_card("금 시세 (Gold)", data["금 시세 (Gold)"]["price"], data["금 시세 (Gold)"]["change"], data["금 시세 (Gold)"]["change_pct"], prefix="🪙 ")
 
 st.divider()
 
@@ -288,8 +289,6 @@ with col_right:
         💡 <b>Tip:</b> 주요 물가 지표 발표일에는 금리와 VIX 변동성에 유의하세요.
     </div>
     """, unsafe_allow_html=True)
-
-st.markdown(f"**💰 현재 금 시세 (Gold Futures):** `${data['금 시세 (Gold)']['price']:,.2f}`")
 
 st.divider()
 

@@ -25,7 +25,11 @@ def get_market_data():
         "S&P 500": "^GSPC",
         "나스닥 종합": "^IXIC",
         "금 시세 (Gold)": "GC=F"
-    }
+        "필라델피아 반도체": "^SOX",
+        "엔비디아": "NVDA",
+        "전력 인프라 (XLU)": "XLU",
+        "구리 시세": "HG=F"
+   }
     
     data = {}
     for name, ticker in tickers.items():

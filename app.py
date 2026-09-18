@@ -54,13 +54,12 @@ with st.spinner("실시간 시장 데이터를 불러오는 중입니다... 잠�
 st.subheader("📌 주요 거시경제 및 시장 지표 요약")
 
 col1, col2, col3, col4 = st.columns(4)
-
 with col1:
     st.metric("미국 2년물 국채금리", f"{data['미국 2년물 금리']['price']:.3f}%", f"{data['미국 2년물 금리']['change']:.2f}%")
     st.metric("미국 10년물 국채금리", f"{data['미국 10년물 금리']['price']:.3f}%", f"{data['미국 10년물 금리']['change']:.2f}%")
 
 with col2:
-    st.metric("미국 30년물 국채금리", f"{data['미국 30년물 금리']['price']:.3f}%", f"{data['미국 30년물 금리']['change']에서 무슨 일이든']['change']:.2f}%" if 'change' in data['미국 30년물 금리'] else "0.00%")
+    st.metric("미국 30년물 국채금리", f"{data['미국 30년물 금리']['price']:.3f}%", f"{data['미국 30년물 금리']['change']:.2f}%")
     spread = data['미국 10년물 금리']['price'] - data['미국 2년물 금리']['price']
     st.metric("장단기 금리차 (10Y-2Y)", f"{spread:.3f}%p", delta_color="off")
 

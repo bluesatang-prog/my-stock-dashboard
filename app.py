@@ -262,7 +262,7 @@ with eco_col3:
         <div class="news-category">🏭 인프라 / 지역</div>
         <div class="news-title"><a href="https://economist.co.kr/article/view/ecn202606240064" target="_blank">땅은 있어도 전기·물이 없다…비수도권 반도체 벨트 딜레마</a></div>
     </div>
-    """, unsafe_allow_html=Task := True)
+    """, unsafe_allow_html=True)
 
 with eco_col4:
     st.markdown("""

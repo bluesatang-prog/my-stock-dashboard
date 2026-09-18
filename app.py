@@ -244,8 +244,7 @@ st.markdown(f"**💰 현재 금 시세 (Gold Futures):** `${data['금 시세 (Go
 
 st.divider()
 
-# 6. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
-# 💡 새로운 뉴스를 추가하거나 수정하려면 아래 리스트에 항목을 추가/변경하시면 됩니다!
+# 6. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리 (10개 이상으로 늘어나도 행바꿈 처리됨)
 archived_news = [
     {
         "category": "📈 반도체 / 전력",
@@ -277,22 +276,32 @@ archived_news = [
         "url": "https://economist.co.kr/article/view/ecn202609030021",
         "date": "2026.09.03 08:45"
     }
+    # 💡 6번째 이후 기사들도 여기에 아래 형식으로 계속 추가하시면 됩니다!
+    # {
+    #     "category": "카테고리명",
+    #     "title": "기사 제목",
+    #     "url": "기사 링크",
+    #     "date": "YYYY.MM.DD HH:MM"
+    # }
 ]
 
 st.subheader("📰 이코노미스트 | 반도체 & 전력 인프라 핵심 리포트 아카이브")
 st.markdown("이코노미스트(economist.co.kr)에 보도된 반도체 및 전력 인프라 관련 핵심 심층 리포트 모음입니다.")
 
-# 5열 레이아웃을 동적으로 생성
-cols = st.columns(len(archived_news))
-
-for i, news in enumerate(archived_news):
-    with cols[i]:
-        st.markdown(f"""
-        <div class="news-box">
-            <div>
-                <div class="news-category">{news['category']}</div>
-                <div class="news-title"><a href="{news['url']}" target="_blank">{news['title']}</a></div>
+# 한 줄에 5개씩 배치하고, 기사가 많아지면 자동으로 아랫줄로 내려가도록 동적 렌더링
+num_cols = 5
+for i in range(0, len(archived_news), num_cols):
+    row_news = archived_news[i:i + num_cols]
+    cols = st.columns(num_cols)
+    
+    for j, news in enumerate(row_news):
+        with cols[j]:
+            st.markdown(f"""
+            <div class="news-box">
+                <div>
+                    <div class="news-category">{news['category']}</div>
+                    <div class="news-title"><a href="{news['url']}" target="_blank">{news['title']}</a></div>
+                </div>
+                <div class="news-date">🕒 입력 {news['date']}</div>
             </div>
-            <div class="news-date">🕒 입력 {news['date']}</div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)

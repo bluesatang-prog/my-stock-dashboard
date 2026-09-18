@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. 커스텀 CSS (카드 디자인 및 상단 정렬 스타일)
+# 2. 커스텀 CSS (카드 디자인, 뉴스 섹션 및 상단 정렬 스타일)
 st.markdown("""
 <style>
 .metric-card {
@@ -52,6 +52,25 @@ st.markdown("""
     font-size: 13px;
     color: #495057;
     margin-top: 15px;
+}
+.news-box {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+.news-category {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1c7ed6;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+.news-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #343a40;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -211,3 +230,51 @@ with col_right:
     st.info("💡 **팁:** 주요 물가 지표 발표일에는 금리와 VIX 변동성에 유의하세요.")
 
 st.markdown(f"**💰 현재 금 시세 (Gold Futures):** `${data['금 시세 (Gold)']['price']:,.2f}`")
+
+st.divider()
+
+# 6. [추가 섹션] 이코노미스트 - 디지털 경제뉴스 및 재테크 정보
+st.subheader("📰 이코노미스트 | 당신의 내일을 위한 디지털 경제뉴스")
+st.markdown("주식‧금융‧부동산‧IT‧바이오 등 핵심 재테크 및 시장 동향 인사이트를 제공합니다.")
+
+eco_col1, eco_col2, eco_col3, eco_col4, eco_col5 = st.columns(5)
+
+with eco_col1:
+    st.markdown("""
+    <div class="news-box">
+        <div class="news-category">📈 주식 / 증권</div>
+        <div class="news-title">글로벌 투자사, AI 및 인프라 관련주 비중 확대 조정</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with eco_col2:
+    st.markdown("""
+    <div class="news-box">
+        <div class="news-category">💳 금융 / 재테크</div>
+        <div class="news-title">기준금리 인하 기대감 속 IRP 및 예적금 포트폴리오 전략</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with eco_col3:
+    st.markdown("""
+    <div class="news-box">
+        <div class="news-category">🏠 부동산</div>
+        <div class="news-title">수도권 주요 지역 청약 경쟁률 및 대출 규제 동향 분석</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with eco_col4:
+    st.markdown("""
+    <div class="news-box">
+        <div class="news-category">💻 IT / 기술</div>
+        <div class="news-title">차세대 반도체 공급망 재편 및 전력 인프라 수요 급증</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with eco_col5:
+    st.markdown("""
+    <div class="news-box">
+        <div class="news-category">🧬 바이오 / 제약</div>
+        <div class="news-title">글로벌 임상 결과 발표 앞둔 주요 제약·바이오 파이프라인</div>
+    </div>
+    """, unsafe_allow_html=True)

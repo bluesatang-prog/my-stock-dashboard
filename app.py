@@ -264,18 +264,13 @@ def get_market_data():
 with st.spinner("실시간 시장 데이터를 불러오는 중입니다..."):
     data = get_market_data()
 
-# 안전하게 데이터를 가져오기 위한 헬퍼 함수
 def safe_get(key):
     return data.get(key, {"price": 0.0, "change": 0.0, "change_pct": 0.0})
 
-# HTML 카드 렌더링 헬퍼 함수
 def render_card(title, price_val, change_val, change_pct_val, is_rate=False, prefix="🇺🇸 "):
-    if pd.isna(price_val):
-        price_val = 0.0
-    if pd.isna(change_val):
-        change_val = 0.0
-    if pd.isna(change_pct_val):
-        change_pct_val = 0.0
+    if pd.isna(price_val): price_val = 0.0
+    if pd.isna(change_val): change_val = 0.0
+    if pd.isna(change_pct_val): change_pct_val = 0.0
 
     if change_val >= 0:
         sign = "▲"
@@ -300,7 +295,6 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False, pre
 # 5. 카테고리별 주요 지표 섹션 배치
 st.subheader("📌 주요 거시경제 및 시장 지표 (카테고리별 분류)")
 
-# --- [카테고리 1] 국내 시장 및 주요 증시/반도체 ---
 st.markdown('<div class="category-header">🇰🇷 국내 시장 및 🇺🇸 주요 증시·반도체</div>', unsafe_allow_html=True)
 col_c1, col_c2, col_c3, col_c4 = st.columns(4)
 
@@ -320,7 +314,6 @@ with col_c4:
     d = safe_get("필라델피아 반도체")
     render_card("필라델피아 반도체", d["price"], d["change"], d["change_pct"])
 
-# --- [카테고리 2] 금리 및 채권 ---
 st.markdown('<div class="category-header">📈 금리 및 채권 시장</div>', unsafe_allow_html=True)
 col_r1, col_r2, col_r3, col_r4 = st.columns(4)
 
@@ -339,7 +332,6 @@ with col_r3:
 with col_r4:
     st.markdown("")
 
-# --- [카테고리 3] 환율, 변동성 및 원자재/섹터 ---
 st.markdown('<div class="category-header">💱 환율·변동성 및 🪙 원자재·섹터 테마</div>', unsafe_allow_html=True)
 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 
@@ -359,7 +351,6 @@ with col_m4:
     d = safe_get("전력 인프라 (XLU)")
     render_card("전력 인프라 (XLU)", d["price"], d["change"], d["change_pct"], prefix="⚡ ")
 
-# 엔비디아 개별 카드 배치
 col_nvda1, _, _, _ = st.columns(4)
 with col_nvda1:
     d = safe_get("엔비디아")
@@ -367,7 +358,7 @@ with col_nvda1:
 
 st.divider()
 
-# 6. 차트 및 경제 일정 섹션 (탭 적용 완료 - 빅테크/반도체 실적 일정 반영)
+# 6. 차트 및 경제 일정 섹션 (코스피 및 멀티종목 차트 렌더링 안전성 강화)
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
@@ -378,8 +369,10 @@ with col_left:
     )
     
     try:
-        if chart_option == "코ส피 지수 (^KS11)":
+        if chart_option == "코스피 지수 (^KS11)":
             df_chart = yf.download("^KS11", period="6mo", progress=False)['Close']
+            if isinstance(df_chart, pd.DataFrame):
+                df_chart = df_chart.squeeze()
             st.line_chart(df_chart)
         elif chart_option == "S&P 500 & 나스닥":
             df_chart = yf.download(["^GSPC", "^IXIC"], period="6mo", progress=False)['Close']
@@ -391,6 +384,8 @@ with col_left:
                 st.line_chart(df_chart)
         elif chart_option == "전력 인프라 (XLU)":
             df_chart = yf.download("XLU", period="6mo", progress=False)['Close']
+            if isinstance(df_chart, pd.DataFrame):
+                df_chart = df_chart.squeeze()
             st.line_chart(df_chart)
         elif chart_option == "미국 국채금리 (10Y, 30Y)":
             df_chart = yf.download(["^TNX", "^TYX"], period="6mo", progress=False)['Close']
@@ -398,17 +393,20 @@ with col_left:
                 st.line_chart(df_chart)
         elif chart_option == "금 시세":
             df_chart = yf.download("GC=F", period="6mo", progress=False)['Close']
+            if isinstance(df_chart, pd.DataFrame):
+                df_chart = df_chart.squeeze()
             st.line_chart(df_chart)
         elif chart_option == "달러 인덱스 (DX-Y.NYB)":
             df_chart = yf.download("DX-Y.NYB", period="6mo", progress=False)['Close']
+            if isinstance(df_chart, pd.DataFrame):
+                df_chart = df_chart.squeeze()
             st.line_chart(df_chart)
-    except Exception:
+    except Exception as e:
         st.info("차트 데이터를 불러오는 중입니다...")
 
 with col_right:
     st.subheader("📅 경제 및 빅테크 실적 일정")
     
-    # 단기 일정 탭과 연간 아카이브 탭 분리 적용 (요청하신 빅테크 & 반도체 실적 및 국가 표기 포함)
     tab_short, tab_annual = st.tabs(["📅 3개월 단기 일정", "🗂️ 연간 빅테크/매크로 아카이브"])
     
     with tab_short:

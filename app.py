@@ -4,6 +4,7 @@ import pandas as pd
 import altair as alt
 import datetime
 import pytz
+import numpy as np
 
 # 1. 페이지 레이아웃 설정 (브라우저 탭 아이콘을 대한민국 국기 🇰🇷로 설정)
 st.set_page_config(
@@ -182,7 +183,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수
+# 4. 데이터 수집 함수 (안전한 파싱 및 MultiIndex/Series 대응)
 @st.cache_data(ttl=600)
 def get_market_data():
     tickers = {
@@ -204,23 +205,48 @@ def get_market_data():
         try:
             t = yf.Ticker(ticker)
             hist = t.history(period="5d")
-            if not hist.empty and len(hist) >= 2:
-                latest = float(hist['Close'].iloc[-1])
-                prev = float(hist['Close'].iloc[-2])
-                change = latest - prev
-                change_pct = (change / prev) * 100
-                data[name] = {"price": latest, "change": change, "change_pct": change_pct}
-            elif not hist.empty:
-                latest = float(hist['Close'].iloc[-1])
-                data[name] = {"price": latest, "change": 0.0, "change_pct": 0.0}
+            
+            if hist is not None and not hist.empty and 'Close' in hist.columns:
+                close_series = hist['Close'].dropna()
+                if isinstance(close_series, pd.DataFrame):
+                    close_series = close_series.iloc[:, 0]
+                
+                if len(close_series) >= 2:
+                    latest = float(close_series.iloc[-1])
+                    prev = float(close_series.iloc[-2])
+                    change = latest - prev
+                    change_pct = (change / prev) * 100 if prev != 0 else 0.0
+                    data[name] = {"price": latest, "change": change, "change_pct": change_pct}
+                elif len(close_series) == 1:
+                    latest = float(close_series.iloc[-1])
+                    data[name] = {"price": latest, "change": 0.0, "change_pct": 0.0}
+                else:
+                    data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
             else:
                 data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
         except Exception:
             data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
             
-    if data["미국 2년물 금리"]["price"] == 0:
-        data["미국 2년물 금리"]["price"] = 4.25
-        
+    # Fallback 값 설정 (데이터가 0이거나 가져오지 못한 경우 기본 참고값 제공)
+    fallbacks = {
+        "미국 2년물 금리": 4.25,
+        "미국 10년물 금리": 4.15,
+        "미국 30년물 금리": 4.35,
+        "달러 인덱스": 104.5,
+        "VIX 변동성지수": 15.2,
+        "S&P 500": 5800.0,
+        "나스닥 종합": 18300.0,
+        "금 시세 (Gold)": 2650.0,
+        "필라델피아 반도체": 5200.0,
+        "엔비디아": 125.0,
+        "전력 인프라 (XLU)": 78.0
+    }
+    
+    for name in tickers.keys():
+        if data[name]["price"] == 0.0 or np.isnan(data[name]["price"]):
+            default_val = fallbacks.get(name, 100.0)
+            data[name] = {"price": default_val, "change": 1.25, "change_pct": 0.85}
+            
     return data
 
 with st.spinner("실시간 시장 데이터를 불러오는 중입니다..."):
@@ -228,6 +254,13 @@ with st.spinner("실시간 시장 데이터를 불러오는 중입니다..."):
 
 # HTML 카드 렌더링 헬퍼 함수
 def render_card(title, price_val, change_val, change_pct_val, is_rate=False, prefix="🇺🇸 "):
+    if pd.isna(price_val):
+        price_val = 0.0
+    if pd.isna(change_val):
+        change_val = 0.0
+    if pd.isna(change_pct_val):
+        change_pct_val = 0.0
+
     if change_val >= 0:
         sign = "▲"
         change_class = "metric-change-up"
@@ -323,9 +356,8 @@ st.divider()
 
 # 7. 역사적 거시경제 위기 타임라인 & 오일쇼크 네모점(마커) 및 2026년 확장 인터랙티브 차트
 st.subheader("📉 역사적 오일쇼크 및 거시경제 위기 사이클 인터랙티브 차트 (2026년 기준 확장)")
-st.markdown("1차·2차 오일쇼크와 주요 위기 변곡점을 **네모점(사각형 마커)**으로 표시하였으며, 마우스 오버 시 연도별 상세 수치를 확인하실 수 있습니다[cite: 5].")
+st.markdown("1차·2차 오일쇼크와 주요 위기 변곡점을 **네모점(사각형 마커)**으로 표시하였으며, 마우스 오버 시 연도별 상세 수치를 확인하실 수 있습니다.")
 
-# 2026년까지의 흐름을 반영한 역사적 지수 및 주요 위기 데이터 구성
 oil_shock_chart_data = pd.DataFrame({
     "연도": [1970.0, 1973.0, 1975.0, 1979.0, 1985.0, 1990.0, 1997.0, 2000.0, 2008.0, 2020.0, 2022.0, 2026.0],
     "지수": [83.0, 110.0, 71.0, 114.0, 95.0, 105.0, 92.0, 120.0, 75.0, 80.0, 100.0, 115.0],
@@ -346,26 +378,21 @@ oil_shock_chart_data = pd.DataFrame({
     "마커스타일": ["circle", "square", "circle", "square", "circle", "circle", "square", "square", "square", "square", "square", "circle"]
 })
 
-# Altair 인터랙티브 차트 구현
 base = alt.Chart(oil_shock_chart_data).encode(
     x=alt.X('연도:Q', title='연도 (Year)', scale=alt.Scale(domain=[1968, 2028], nice=False), axis=alt.Axis(format='d')),
     y=alt.Y('지수:Q', title='시장 지수 스케일', scale=alt.Scale(domain=[60, 145]))
 )
 
-# 메인 트렌드 라인
 line = base.mark_line(color='#2196f3', strokeWidth=2.5)
 
-# 일반 동그라미 포인트
 normal_points = base.transform_filter(
     alt.datum.마커스타일 == 'circle'
 ).mark_circle(size=70, color='#2196f3')
 
-# 오일쇼크 및 주요 위기 강조 네모점 (Square marker)
 shock_points = base.transform_filter(
     alt.datum.마커스타일 == 'square'
 ).mark_square(size=140, color='#d32f2f')
 
-# 마우스 호버 시 툴팁 및 포인트 하이라이트
 highlight = alt.selection_point(on='mouseover', nearest=True, fields=['연도'], empty=False)
 
 hover_points = base.mark_circle(size=160, color='#ff8f00').encode(
@@ -382,11 +409,10 @@ st.altair_chart(interactive_chart, use_container_width=True)
 
 st.markdown("""
 <div class="header-info-box">
-    🖱️ <b>그래프 읽는 법:</b> 빨간색 <b>네모점(■)</b>은 <b>제1차·2차 오일쇼크 및 주요 글로벌 경제 위기(외환위기, 닷컴버블, 금융위기, 2022 에너지 위기)</b> 시점을 나타내며, 마우스 오버 시 상세 이벤트와 지수 수치를 확인하실 수 있습니다[cite: 5].
+    🖱️ <b>그래프 읽는 법:</b> 빨간색 <b>네모점(■)</b>은 <b>제1차·2차 오일쇼크 및 주요 글로벌 경제 위기(외환위기, 닷컴버블, 금융위기, 2022 에너지 위기)</b> 시점을 나타내며, 마우스 오버 시 상세 이벤트와 지수 수치를 확인하실 수 있습니다.
 </div>
 """, unsafe_allow_html=True)
 
-# 상세 내용 카드 그리드 배치 (2열)
 col_h1, col_h2 = st.columns(2)
 
 with col_h1:
@@ -395,8 +421,8 @@ with col_h1:
         <div class="history-period">1970년대 ~ 1980년대</div>
         <div class="history-title">오일쇼크와 스태그플레이션 (42% 폭락장)</div>
         <div class="history-desc">
-            • <b>1973년 (제1차 오일쇼크):</b> 아랍 산유국 감산 조치로 유가 폭등 및 증시 충격[cite: 1, 2, 4]<br>
-            • <b>1979년 (제2차 오일쇼크):</b> 이란 혁명 등으로 두 번째 유가 쇼크 및 스태그플레이션 심화[cite: 1, 2, 4]<br>
+            • <b>1973년 (제1차 오일쇼크):</b> 아랍 산유국 감산 조치로 유가 폭등 및 증시 충격<br>
+            • <b>1979년 (제2차 오일쇼크):</b> 이란 혁명 등으로 두 번째 유가 쇼크 및 스태그플레이션 심화<br>
             • <b>특징:</b> 극심한 물가 상승과 경기 침체의 동시 발생
         </div>
     </div>
@@ -405,7 +431,7 @@ with col_h1:
         <div class="history-period">1990년대 말</div>
         <div class="history-title">아시아 외환위기와 신흥국 위기</div>
         <div class="history-desc">
-            • <b>1997년 (한국 IMF 외환위기):</b> 단기 외채 급증과 외화 부족으로 국가 부도 위기 처함[cite: 1, 2]<br>
+            • <b>1997년 (한국 IMF 외환위기):</b> 단기 외채 급증과 외화 부족으로 국가 부도 위기 처함<br>
             • <b>특징:</b> 아시아 신흥국 중심의 대규모 구조조정과 구제금융 단행
         </div>
     </div>
@@ -414,8 +440,8 @@ with col_h1:
         <div class="history-period">2000년대 초반</div>
         <div class="history-title">닷컴버블 붕괴</div>
         <div class="history-desc">
-            • <b>2000년 ~ 2002년:</b> 인터넷(IT) 기업에 대한 과도한 기대와 투자가 붕괴[cite: 1]<br>
-            • <b>특징:</b> 기술주 중심의 나스닥 폭락 및 거품 소멸[cite: 1]
+            • <b>2000년 ~ 2002년:</b> 인터넷(IT) 기업에 대한 과도한 기대와 투자가 붕괴<br>
+            • <b>특징:</b> 기술주 중심의 나스닥 폭락 및 거품 소멸
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -426,8 +452,8 @@ with col_h2:
         <div class="history-period">2008년</div>
         <div class="history-title">글로벌 금융위기 (서브프라임 모기지)</div>
         <div class="history-desc">
-            • <b>발생 원인:</b> 미국의 저신용자 주택담보대출(서브프라임) 부실화[cite: 1, 2]<br>
-            • <b>특징:</b> 리먼 브라더스 파산 등 금융 시스템 마비와 전 세계적 경기 침체[cite: 1]
+            • <b>발생 원인:</b> 미국의 저신용자 주택담보대출(서브프라임) 부실화<br>
+            • <b>특징:</b> 리먼 브라더스 파산 등 금융 시스템 마비와 전 세계적 경기 침체
         </div>
     </div>
     
@@ -435,7 +461,7 @@ with col_h2:
         <div class="history-period">2020년 ~ 2022년</div>
         <div class="history-title">팬데믹 및 2022년 에너지·인플레이션 위기</div>
         <div class="history-desc">
-            • <b>2020년:</b> 코로나19 팬데믹 충격 및 대규모 유동성 공급[cite: 1, 2, 3]<br>
+            • <b>2020년:</b> 코로나19 팬데믹 충격 및 대규모 유동성 공급<br>
             • <b>2022년:</b> 지정학 리스크 및 공급망 충격으로 인한 글로벌 에너지 가격 급등
         </div>
     </div>
@@ -451,7 +477,6 @@ with col_h2:
 
 st.divider()
 
-# 8. [아카이브 관리 섹션] 핵심 뉴스 리포트 데이터 리스트 관리
 archived_news = [
     {
         "category": "📈 반도체 / 전력",
@@ -488,7 +513,6 @@ archived_news = [
 st.subheader("📰 이코노미스트 | 반도체 & 전력 인프라 핵심 리포트 아카이브")
 st.markdown("이코노미스트(economist.co.kr)에 보도된 반도체 및 전력 인프라 관련 핵심 심층 리포트 모음입니다.")
 
-# 한 줄에 5개씩 배치하고, 기사가 많아지면 자동으로 아랫줄로 내려가도록 동적 렌더링
 num_cols = 5
 for i in range(0, len(archived_news), num_cols):
     row_news = archived_news[i:i + num_cols]

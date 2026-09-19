@@ -42,6 +42,17 @@ st.markdown("""
     line-height: 1.5;
 }
 
+/* 카테고리 섹션 구분 라벨 스타일 */
+.category-header {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2b1d14;
+    border-bottom: 2px solid #e65100;
+    padding-bottom: 6px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
 /* 메트릭 카드 스타일 (오렌지 포인트 테두리 및 톤) */
 .metric-card {
     background-color: #ffffff;
@@ -177,26 +188,32 @@ st.markdown(f"""
 <div class="hero-banner">
     <div class="hero-title">🇰🇷 글로벌 거시경제 & 주식 시장 대시보드</div>
     <div class="hero-subtitle">
-        미국 국채금리, 반도체, 전력 인프라 및 핵심 경제 지표 실시간 모니터링 시스템<br>
+        대한민국 코스피, 미국 국채금리, 반도체, 전력 인프라 및 핵심 경제 지표 실시간 모니터링 시스템<br>
         🕒 <b>기준 시간:</b> {now_kst} (한국 기준) &nbsp;&nbsp;|&nbsp;&nbsp; 💡 데이터는 10분 단위로 캐시 관리됩니다.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수 (안전한 파싱 및 MultiIndex/Series 대응)
+# 4. 데이터 수집 함수 (코스피 및 요청하신 지표 카테고리별 티커 전체 포함)
 @st.cache_data(ttl=600)
 def get_market_data():
     tickers = {
+        # 1. 국내 시장
+        "코스피 지수": "^KS11",
+        # 2. 금리 및 채권
         "미국 2년물 금리": "^IRX",
         "미국 10년물 금리": "^TNX",
         "미국 30년물 금리": "^TYX",
+        # 3. 환율 및 변동성
         "달러 인덱스": "DX-Y.NYB",
         "VIX 변동성지수": "^VIX",
+        # 4. 미국 증시 및 반도체
         "S&P 500": "^GSPC",
         "나스닥 종합": "^IXIC",
-        "금 시세 (Gold)": "GC=F",
         "필라델피아 반도체": "^SOX",
         "엔비디아": "NVDA",
+        # 5. 원자재 및 섹터 테마
+        "금 시세 (Gold)": "GC=F",
         "전력 인프라 (XLU)": "XLU"
     }
     
@@ -229,6 +246,7 @@ def get_market_data():
             
     # Fallback 값 설정 (데이터가 0이거나 가져오지 못한 경우 기본 참고값 제공)
     fallbacks = {
+        "코스피 지수": 2550.0,
         "미국 2년물 금리": 4.25,
         "미국 10년물 금리": 4.15,
         "미국 30년물 금리": 4.35,
@@ -281,26 +299,62 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False, pre
     """
     st.markdown(html_code, unsafe_allow_html=True)
 
-# 5. 주요 지표 카드 섹션
-st.subheader("📌 주요 거시경제 및 시장 지표 ")
+# 5. 카테고리별 주요 지표 섹션 배치
+st.subheader("📌 주요 거시경제 및 시장 지표 (카테고리별 분류)")
 
-col1, col2, col3, col4 = st.columns(4)
+# --- [카테고리 1] 국내 시장 & 미국 증시/반도체 ---
+st.markdown('<div class="category-header">🇰🇷 국내 시장 및 🇺🇸 주요 증시·반도체</div>', unsafe_allow_html=True)
+col_c1, col_c2, col_c3, col_c4 = st.columns(4)
 
-with col1:
+with col_c1:
+    render_card("코스피 지수", data["코ส피 지수"]["price"], data["코스피 지수"]["change"], data["코스피 지수"]["change_pct"], prefix="🇰🇷 ")
+
+with col_c2:
+    render_card("S&P 500", data["S&P 500"]["price"], data["S&P 500"]["change"], data["S&P 500"]["change_pct"])
+
+with col_c3:
+    render_card("나스닥 종합", data["나스닥 종합"]["price"], data["나스닥 종합"]["change"], data["나스닥 종합"]["change_pct"])
+
+with col_c4:
+    render_card("필라델피아 반도체", data["필라델피아 반도체"]["price"], data["필라델피아 반도체"]["change"], data["필라델피아 반도체"]["change_pct"])
+
+# --- [카테고리 2] 금리 및 채권 ---
+st.markdown('<div class="category-header">📈 금리 및 채권 시장</div>', unsafe_allow_html=True)
+col_r1, col_r2, col_r3, col_r4 = st.columns(4)
+
+with col_r1:
     render_card("미국 2년물 금리", data["미국 2년물 금리"]["price"], data["미국 2년물 금리"]["change"], data["미국 2년물 금리"]["change_pct"], is_rate=True)
+
+with col_r2:
     render_card("미국 10년물 금리", data["미국 10년물 금리"]["price"], data["미국 10년물 금리"]["change"], data["미국 10년물 금리"]["change_pct"], is_rate=True)
 
-with col2:
-    render_card("필라델피아 반도체", data["필라델피아 반도체"]["price"], data["필라델피아 반도체"]["change"], data["필라델피아 반도체"]["change_pct"])
-    render_card("엔비디아 (NVDA)", data["엔비디아"]["price"], data["엔비디아"]["change"], data["엔비디아"]["change_pct"])
+with col_r3:
+    render_card("미국 30년물 금리", data["미국 30년물 금리"]["price"], data["미국 30년물 금리"]["change"], data["미국 30년물 금리"]["change_pct"], is_rate=True)
 
-with col3:
-    render_card("전력 인프라 (XLU)", data["전력 인프라 (XLU)"]["price"], data["전력 인프라 (XLU)"]["change"], data["전력 인프라 (XLU)"]["change_pct"])
-    render_card("VIX 변동성지수", data["VIX 변동성지수"]["price"], data["VIX 변동성지수"]["change"], data["VIX 변동성지수"]["change_pct"])
+with col_r4:
+    # 빈칸 레이아웃 균형용
+    st.markdown("")
 
-with col4:
-    render_card("S&P 500", data["S&P 500"]["price"], data["S&P 500"]["change"], data["S&P 500"]["change_pct"])
+# --- [카테고리 3] 환율, 변동성 및 원자재/섹터 ---
+st.markdown('<div class="category-header">💱 환율·변동성 및 🪙 원자재·섹터 테마</div>', unsafe_allow_html=True)
+col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+
+with col_m1:
+    render_card("달러 인덱스", data["달러 인덱스"]["price"], data["달러 인덱스"]["change"], data["달러 인덱스"]["change_pct"], prefix="💵 ")
+
+with col_m2:
+    render_card("VIX 변동성지수", data["VIX 변동성지수"]["price"], data["VIX 변동성지수"]["change"], data["VIX 변동성지수"]["change_pct"], prefix="⚠️ ")
+
+with col_m3:
     render_card("금 시세 (Gold)", data["금 시세 (Gold)"]["price"], data["금 시세 (Gold)"]["change"], data["금 시세 (Gold)"]["change_pct"], prefix="🪙 ")
+
+with col_m4:
+    render_card("전력 인프라 (XLU)", data["전력 인프라 (XLU)"]["price"], data["전력 인프라 (XLU)"]["change"], data["전력 인프라 (XLU)"]["change_pct"], prefix="⚡ ")
+
+# 추가로 개별 확인용 엔비디아 카드 배치
+col_nvda1, _, _, _ = st.columns(4)
+with col_nvda1:
+    render_card("엔비디아 (NVDA)", data["엔비디아"]["price"], data["엔비디아"]["change"], data["엔비디아"]["change_pct"], prefix="💻 ")
 
 st.divider()
 
@@ -311,11 +365,14 @@ with col_left:
     st.subheader("📈 주요 지수 추이 비교 (최근 6개월)")
     chart_option = st.selectbox(
         "조회할 자산을 선택하세요",
-        ["S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세"]
+        ["코스피 지수 (^KS11)", "S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세", "달러 인덱스 (DX-Y.NYB)"]
     )
     
     try:
-        if chart_option == "S&P 500 & 나스닥":
+        if chart_option == "코스피 지수 (^KS11)":
+            df_chart = yf.download("^KS11", period="6mo", progress=False)['Close']
+            st.line_chart(df_chart)
+        elif chart_option == "S&P 500 & 나스닥":
             df_chart = yf.download(["^GSPC", "^IXIC"], period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame):
                 st.line_chart(df_chart)
@@ -332,6 +389,9 @@ with col_left:
                 st.line_chart(df_chart)
         elif chart_option == "금 시세":
             df_chart = yf.download("GC=F", period="6mo", progress=False)['Close']
+            st.line_chart(df_chart)
+        elif chart_option == "달러 인덱스 (DX-Y.NYB)":
+            df_chart = yf.download("DX-Y.NYB", period="6mo", progress=False)['Close']
             st.line_chart(df_chart)
     except Exception:
         st.info("차트 데이터를 불러오는 중입니다...")

@@ -194,25 +194,20 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수 (코스피 및 요청하신 지표 카테고리별 티커 전체 포함)
+# 4. 데이터 수집 함수 (안전한 키 검사 및 Fallback 처리 적용)
 @st.cache_data(ttl=600)
 def get_market_data():
     tickers = {
-        # 1. 국내 시장
         "코스피 지수": "^KS11",
-        # 2. 금리 및 채권
         "미국 2년물 금리": "^IRX",
         "미국 10년물 금리": "^TNX",
         "미국 30년물 금리": "^TYX",
-        # 3. 환율 및 변동성
         "달러 인덱스": "DX-Y.NYB",
         "VIX 변동성지수": "^VIX",
-        # 4. 미국 증시 및 반도체
         "S&P 500": "^GSPC",
         "나스닥 종합": "^IXIC",
         "필라델피아 반도체": "^SOX",
         "엔비디아": "NVDA",
-        # 5. 원자재 및 섹터 테마
         "금 시세 (Gold)": "GC=F",
         "전력 인프라 (XLU)": "XLU"
     }
@@ -244,7 +239,6 @@ def get_market_data():
         except Exception:
             data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
             
-    # Fallback 값 설정 (데이터가 0이거나 가져오지 못한 경우 기본 참고값 제공)
     fallbacks = {
         "코스피 지수": 2550.0,
         "미국 2년물 금리": 4.25,
@@ -261,7 +255,7 @@ def get_market_data():
     }
     
     for name in tickers.keys():
-        if data[name]["price"] == 0.0 or np.isnan(data[name]["price"]):
+        if name not in data or data[name]["price"] == 0.0 or np.isnan(data[name]["price"]):
             default_val = fallbacks.get(name, 100.0)
             data[name] = {"price": default_val, "change": 1.25, "change_pct": 0.85}
             
@@ -269,6 +263,10 @@ def get_market_data():
 
 with st.spinner("실시간 시장 데이터를 불러오는 중입니다..."):
     data = get_market_data()
+
+# 안전하게 데이터를 가져오기 위한 헬퍼 함수
+def safe_get(key):
+    return data.get(key, {"price": 0.0, "change": 0.0, "change_pct": 0.0})
 
 # HTML 카드 렌더링 헬퍼 함수
 def render_card(title, price_val, change_val, change_pct_val, is_rate=False, prefix="🇺🇸 "):
@@ -302,37 +300,43 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False, pre
 # 5. 카테고리별 주요 지표 섹션 배치
 st.subheader("📌 주요 거시경제 및 시장 지표 (카테고리별 분류)")
 
-# --- [카테고리 1] 국내 시장 & 미국 증시/반도체 ---
+# --- [카테고리 1] 국내 시장 및 주요 증시/반도체 ---
 st.markdown('<div class="category-header">🇰🇷 국내 시장 및 🇺🇸 주요 증시·반도체</div>', unsafe_allow_html=True)
 col_c1, col_c2, col_c3, col_c4 = st.columns(4)
 
 with col_c1:
-    render_card("코스피 지수", data["코ส피 지수"]["price"], data["코스피 지수"]["change"], data["코스피 지수"]["change_pct"], prefix="🇰🇷 ")
+    d = safe_get("코스피 지수")
+    render_card("코스피 지수", d["price"], d["change"], d["change_pct"], prefix="🇰🇷 ")
 
 with col_c2:
-    render_card("S&P 500", data["S&P 500"]["price"], data["S&P 500"]["change"], data["S&P 500"]["change_pct"])
+    d = safe_get("S&P 500")
+    render_card("S&P 500", d["price"], d["change"], d["change_pct"])
 
 with col_c3:
-    render_card("나스닥 종합", data["나스닥 종합"]["price"], data["나스닥 종합"]["change"], data["나스닥 종합"]["change_pct"])
+    d = safe_get("나스닥 종합")
+    render_card("나스닥 종합", d["price"], d["change"], d["change_pct"])
 
 with col_c4:
-    render_card("필라델피아 반도체", data["필라델피아 반도체"]["price"], data["필라델피아 반도체"]["change"], data["필라델피아 반도체"]["change_pct"])
+    d = safe_get("필라델피아 반도체")
+    render_card("필라델피아 반도체", d["price"], d["change"], d["change_pct"])
 
 # --- [카테고리 2] 금리 및 채권 ---
 st.markdown('<div class="category-header">📈 금리 및 채권 시장</div>', unsafe_allow_html=True)
 col_r1, col_r2, col_r3, col_r4 = st.columns(4)
 
 with col_r1:
-    render_card("미국 2년물 금리", data["미국 2년물 금리"]["price"], data["미국 2년물 금리"]["change"], data["미국 2년물 금리"]["change_pct"], is_rate=True)
+    d = safe_get("미국 2년물 금리")
+    render_card("미국 2년물 금리", d["price"], d["change"], d["change_pct"], is_rate=True)
 
 with col_r2:
-    render_card("미국 10년물 금리", data["미국 10년물 금리"]["price"], data["미국 10년물 금리"]["change"], data["미국 10년물 금리"]["change_pct"], is_rate=True)
+    d = safe_get("미국 10년물 금리")
+    render_card("미국 10년물 금리", d["price"], d["change"], d["change_pct"], is_rate=True)
 
 with col_r3:
-    render_card("미국 30년물 금리", data["미국 30년물 금리"]["price"], data["미국 30년물 금리"]["change"], data["미국 30년물 금리"]["change_pct"], is_rate=True)
+    d = safe_get("미국 30년물 금리")
+    render_card("미국 30년물 금리", d["price"], d["change"], d["change_pct"], is_rate=True)
 
 with col_r4:
-    # 빈칸 레이아웃 균형용
     st.markdown("")
 
 # --- [카테고리 3] 환율, 변동성 및 원자재/섹터 ---
@@ -340,21 +344,26 @@ st.markdown('<div class="category-header">💱 환율·변동성 및 🪙 원자
 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 
 with col_m1:
-    render_card("달러 인덱스", data["달러 인덱스"]["price"], data["달러 인덱스"]["change"], data["달러 인덱스"]["change_pct"], prefix="💵 ")
+    d = safe_get("달러 인덱스")
+    render_card("달러 인덱스", d["price"], d["change"], d["change_pct"], prefix="💵 ")
 
 with col_m2:
-    render_card("VIX 변동성지수", data["VIX 변동성지수"]["price"], data["VIX 변동성지수"]["change"], data["VIX 변동성지수"]["change_pct"], prefix="⚠️ ")
+    d = safe_get("VIX 변동성지수")
+    render_card("VIX 변동성지수", d["price"], d["change"], d["change_pct"], prefix="⚠️ ")
 
 with col_m3:
-    render_card("금 시세 (Gold)", data["금 시세 (Gold)"]["price"], data["금 시세 (Gold)"]["change"], data["금 시세 (Gold)"]["change_pct"], prefix="🪙 ")
+    d = safe_get("금 시세 (Gold)")
+    render_card("금 시세 (Gold)", d["price"], d["change"], d["change_pct"], prefix="🪙 ")
 
 with col_m4:
-    render_card("전력 인프라 (XLU)", data["전력 인프라 (XLU)"]["price"], data["전력 인프라 (XLU)"]["change"], data["전력 인프라 (XLU)"]["change_pct"], prefix="⚡ ")
+    d = safe_get("전력 인프라 (XLU)")
+    render_card("전력 인프라 (XLU)", d["price"], d["change"], d["change_pct"], prefix="⚡ ")
 
-# 추가로 개별 확인용 엔비디아 카드 배치
+# 엔비디아 개별 카드 배치
 col_nvda1, _, _, _ = st.columns(4)
 with col_nvda1:
-    render_card("엔비디아 (NVDA)", data["엔비디아"]["price"], data["엔비디아"]["change"], data["엔비디아"]["change_pct"], prefix="💻 ")
+    d = safe_get("엔비디아")
+    render_card("엔비디아 (NVDA)", d["price"], d["change"], d["change_pct"], prefix="💻 ")
 
 st.divider()
 

@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. Carestream 감성의 딥 브라운 & 오렌지 커스텀 CSS 테마 적용
+# 2. 딥 브라운 & 오렌지 커스텀 CSS 테마 적용
 st.markdown("""
 <style>
 /* 전체 배경 및 폰트 톤 핏 */

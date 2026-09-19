@@ -367,7 +367,7 @@ with col_nvda1:
 
 st.divider()
 
-# 6. 차트 및 경제 일정 섹션
+# 6. 차트 및 경제 일정 섹션 (탭 적용 완료)
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
@@ -406,20 +406,39 @@ with col_left:
         st.info("차트 데이터를 불러오는 중입니다...")
 
 with col_right:
-    st.subheader("📅 이번 주 주요 경제 일정")
-    schedule_data = {
-        "날짜": ["2026-09-16 (수)", "2026-09-17 (목)", "2026-09-18 (금)", "2026-09-21 (월)"],
-        "이벤트": ["미국 CPI 발표", "미국 신규 실업수당", "미국 PCE 물가", "FOMC 회의 결과"],
-        "중요도": ["🔥 높음", "보통", "🔥 높음", "🚨 최고"]
-    }
-    df_schedule = pd.DataFrame(schedule_data)
-    st.table(df_schedule)
+    st.subheader("📅 경제 일정 및 아카이브")
     
-    st.markdown("""
-    <div class="header-info-box">
-        💡 <b>Tip:</b> 주요 물가 지표 발표일에는 금리와 VIX 변동성에 유의하세요.
-    </div>
-    """, unsafe_allow_html=True)
+    # 단기 일정 탭과 연간 아카이브 탭 분리 적용
+    tab_short, tab_annual = st.tabs(["📅 3개월 단기 일정", "🗂️ 연간 FOMC 아카이브"])
+    
+    with tab_short:
+        schedule_data = {
+            "날짜": ["2026-09-16 (수)", "2026-09-17 (목)", "2026-09-18 (금)", "2026-09-21 (월)"],
+            "이벤트": ["미국 CPI 발표", "미국 신규 실업수당", "미국 PCE 물가", "FOMC 회의 결과"],
+            "중요도": ["🔥 높음", "보통", "🔥 높음", "🚨 최고"]
+        }
+        df_schedule = pd.DataFrame(schedule_data)
+        st.table(df_schedule)
+        
+        st.markdown("""
+        <div class="header-info-box">
+            💡 <b>Tip:</b> 단기 3개월 일정은 즉각적인 변동성 대응에 집중합니다.
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with tab_annual:
+        annual_data = {
+            "시기": ["2026년 상반기", "2026년 9월", "2026년 11월", "2026년 12월"],
+            "연간 주요 이벤트": ["상반기 주요 FOMC 및 금리 동결 여부", "하반기 인플레이션 분수령", "미국 대선/중대 정치 이벤트", "연말 최종 FOMC 및 금리 전망"]
+        }
+        df_annual = pd.DataFrame(annual_data)
+        st.table(df_annual)
+        
+        st.markdown("""
+        <div class="header-info-box">
+            🗂️ <b>연간 아카이브:</b> 거시경제의 큰 추세와 연간 금리 경로를 조망합니다.
+        </div>
+        """, unsafe_allow_html=True)
 
 st.divider()
 

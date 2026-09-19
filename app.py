@@ -367,7 +367,7 @@ with col_nvda1:
 
 st.divider()
 
-# 6. 차트 및 경제 일정 섹션 (탭 적용 완료)
+# 6. 차트 및 경제 일정 섹션 (탭 적용 완료 - 빅테크/반도체 실적 일정 반영)
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
@@ -378,7 +378,7 @@ with col_left:
     )
     
     try:
-        if chart_option == "코스피 지수 (^KS11)":
+        if chart_option == "코ส피 지수 (^KS11)":
             df_chart = yf.download("^KS11", period="6mo", progress=False)['Close']
             st.line_chart(df_chart)
         elif chart_option == "S&P 500 & 나스닥":
@@ -406,37 +406,69 @@ with col_left:
         st.info("차트 데이터를 불러오는 중입니다...")
 
 with col_right:
-    st.subheader("📅 경제 일정 및 아카이브")
+    st.subheader("📅 경제 및 빅테크 실적 일정")
     
-    # 단기 일정 탭과 연간 아카이브 탭 분리 적용
-    tab_short, tab_annual = st.tabs(["📅 3개월 단기 일정", "🗂️ 연간 FOMC 아카이브"])
+    # 단기 일정 탭과 연간 아카이브 탭 분리 적용 (요청하신 빅테크 & 반도체 실적 및 국가 표기 포함)
+    tab_short, tab_annual = st.tabs(["📅 3개월 단기 일정", "🗂️ 연간 빅테크/매크로 아카이브"])
     
     with tab_short:
         schedule_data = {
-            "날짜": ["2026-09-16 (수)", "2026-09-17 (목)", "2026-09-18 (금)", "2026-09-21 (월)"],
-            "이벤트": ["미국 CPI 발표", "미국 신규 실업수당", "미국 PCE 물가", "FOMC 회의 결과"],
-            "중요도": ["🔥 높음", "보통", "🔥 높음", "🚨 최고"]
+            "날짜": [
+                "2026-10-22 (목)", 
+                "2026-10-27 (화)", 
+                "2026-10-28 (수)", 
+                "2026-10-29 (목)", 
+                "2026-10-29 (목)", 
+                "2026-11-12 (목)",
+                "2026-10월 말~11월",
+                "2026-10월 말~11월"
+            ],
+            "기업/이벤트": [
+                "테슬라 (Tesla)", 
+                "알파벳 (Alphabet)", 
+                "메타 (Meta) / 마이크로소프트", 
+                "아마존 (Amazon)", 
+                "삼성전자 / SK하이닉스 실적", 
+                "엔비디아 (NVIDIA)",
+                "키옥시아 (Kioxia 실적)",
+                "미국 FOMC 회의 결과"
+            ],
+            "국가/중요도": [
+                "🇺🇸 미국 (🔥 높음)", 
+                "🇺🇸 미국 (🔥 높음)", 
+                "🇺🇸 미국 (🚨 최고)", 
+                "🇺🇸 미국 (🔥 높음)", 
+                "🇰🇷 대한민국 (🚨 최고)", 
+                "🇺🇸 미국 (🚨 최고)",
+                "🇯🇵 일본 (보통)",
+                "🇺🇸 미국 (🚨 최고)"
+            ]
         }
         df_schedule = pd.DataFrame(schedule_data)
         st.table(df_schedule)
         
         st.markdown("""
         <div class="header-info-box">
-            💡 <b>Tip:</b> 단기 3개월 일정은 즉각적인 변동성 대응에 집중합니다.
+            💡 <b>Tip:</b> 주요 빅테크 및 반도체(삼성·하이닉스·엔비디아 등)의 3분기 실적 발표 집중 구간입니다.
         </div>
         """, unsafe_allow_html=True)
         
     with tab_annual:
         annual_data = {
-            "시기": ["2026년 상반기", "2026년 9월", "2026년 11월", "2026년 12월"],
-            "연간 주요 이벤트": ["상반기 주요 FOMC 및 금리 동결 여부", "하반기 인플레이션 분수령", "미국 대선/중대 정치 이벤트", "연말 최종 FOMC 및 금리 전망"]
+            "시기": ["2026년 상반기", "2026년 3분기~4분기", "2026년 11월", "2026년 12월"],
+            "연간 주요 이벤트": [
+                "상반기 주요 빅테크 실적 및 금리 동결 여부", 
+                "하반기 AI 인프라 투자 및 반도체 슈퍼사이클 검증", 
+                "미국 대선/중대 정치 이벤트 및 연말 쇼핑 시즌", 
+                "연말 최종 FOMC 및 빅테크 연간 결산 전망"
+            ]
         }
         df_annual = pd.DataFrame(annual_data)
         st.table(df_annual)
         
         st.markdown("""
         <div class="header-info-box">
-            🗂️ <b>연간 아카이브:</b> 거시경제의 큰 추세와 연간 금리 경로를 조망합니다.
+            🗂️ <b>연간 아카이브:</b> 글로벌 빅테크 실적 사이클과 거시경제의 큰 추세를 조망합니다.
         </div>
         """, unsafe_allow_html=True)
 

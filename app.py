@@ -249,7 +249,7 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False, pre
     st.markdown(html_code, unsafe_allow_html=True)
 
 # 5. 주요 지표 카드 섹션
-st.subheader("📌 주요 거시경제 및 시장 지표 요약")
+st.subheader("📌 주요 거시경제 및 시장 지표 ")
 
 col1, col2, col3, col4 = st.columns(4)
 

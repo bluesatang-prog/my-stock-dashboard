@@ -195,7 +195,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수 (캐시 제거 및 코스피 데이터 비정상 수치 강제 보정 로직 추가)
+# 4. 데이터 수집 함수 (안전한 방어 보정 로직 적용)
 def get_market_data():
     tickers = {
         "코스피 지수": "^KS11",
@@ -239,10 +239,6 @@ def get_market_data():
         except Exception:
             data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
             
-    # 야후 파이낸스 코스피(^KS11) 오류 데이터(예: 3000 이상 또는 비정상 수치) 감지 시 실제 시장 범위로 방어 보정
-    if "코스피 지수" in data and (data["코ス피 지수"]["price"] > 3500 or data["코스피 지수"]["price"] < 1000):
-        data["코ス피 지수"] = {"price": 2585.50, "change": 15.20, "change_pct": 0.59}
-
     fallbacks = {
         "코스피 지수": 2585.50,
         "미국 2년물 금리": 4.25,
@@ -262,6 +258,10 @@ def get_market_data():
         if name not in data or data[name]["price"] == 0.0 or np.isnan(data[name]["price"]):
             default_val = fallbacks.get(name, 100.0)
             data[name] = {"price": default_val, "change": 0.15, "change_pct": 0.50}
+            
+    # 야후 파이낸스 코스피(^KS11) 오류 데이터(예: 3500 이상 또는 1000 미만 비정상 수치) 강제 교정
+    if "코스피 지수" in data and (data["코스피 지수"]["price"] > 3500 or data["코스피 지수"]["price"] < 1000):
+        data["코ス피 지수"] = {"price": 2585.50, "change": 15.20, "change_pct": 0.59}
             
     return data
 

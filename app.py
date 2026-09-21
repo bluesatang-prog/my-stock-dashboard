@@ -1,4 +1,3 @@
-# app.py (최종 수정본 - 2026년 코스피 7,000대 시세 반영 및 방어벽 업데이트)
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -40,14 +39,6 @@ st.markdown("""
 .metric-value { font-size: 24px; font-weight: 700; color: #2b1d14; margin-bottom: 6px; }
 .metric-change-up { font-size: 13px; font-weight: 600; color: #d32f2f; }
 .metric-change-down { font-size: 13px; font-weight: 600; color: #0277bd; }
-.history-card {
-    background-color: #ffffff; border: 1px solid #e6ded6;
-    border-left: 4px solid #ff8f00; border-radius: 6px;
-    padding: 16px; margin-bottom: 12px;
-}
-.history-period { font-size: 12px; font-weight: 700; color: #e65100; margin-bottom: 4px; }
-.history-title { font-size: 15px; font-weight: 700; color: #2b1d14; margin-bottom: 8px; }
-.history-desc { font-size: 13px; color: #4e342e; line-height: 1.5; }
 .header-info-box {
     background-color: #fbe9e7; border-left: 4px solid #e65100;
     padding: 12px 15px; border-radius: 4px; font-size: 13px; color: #4e342e;
@@ -76,12 +67,12 @@ st.markdown(f"""
     <div class="hero-title">🇰🇷 글로벌 거시경제 & 주식 시장 대시보드</div>
     <div class="hero-subtitle">
         대한민국 코스피, 미국 국채금리, 반도체, 전력 인프라 및 핵심 경제 지표 실시간 모니터링 시스템<br>
-        🕒 <b>기준 시간:</b> {now_kst} (한국 기준) &nbsp;&nbsp;|&nbsp;&nbsp; 💡 데이터는 캐시 없이 실시간 갱신됩니다.
+        🕒 <b>기준 시간:</b> {now_kst} (한국 기준) &nbsp;&nbsp;|&nbsp;&nbsp; 💡 데이터는 야후 파이낸스 실시간 API를 통해 갱신됩니다.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수 (2026년 기준 현실적인 가격 범위 반영)
+# 4. 실시간 데이터 수집 함수 (강제 고정값 제거, 순수 API 연동)
 def get_market_data():
     tickers = {
         "코스피 지수": "^KS11",
@@ -124,40 +115,6 @@ def get_market_data():
                 data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
         except Exception:
             data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
-            
-    # 합리적인 안전 기준값 설정 (2026년 실제 시세 기준 반영)
-    fallbacks = {
-        "코스피 지수": 7007.72,
-        "미국 2년물 금리": 4.25,
-        "미국 10년물 금리": 4.15,
-        "미국 30년물 금리": 4.35,
-        "달러 인덱스": 28.5,
-        "VIX 변동성지수": 15.2,
-        "S&P 500": 7764.70,
-        "나스닥 종합": 27122.09,
-        "금 시세 (Gold)": 2650.0,
-        "필라델피아 반도체": 12433.17,
-        "엔비디아": 227.38,
-        "전력 인프라 (XLU)": 40.66
-    }
-    
-    for name in tickers.keys():
-        if name not in data or data[name]["price"] == 0.0 or np.isnan(data[name]["price"]):
-            default_val = fallbacks.get(name, 100.0)
-            data[name] = {"price": default_val, "change": 0.0, "change_pct": 0.0}
-            
-    # [2026년 최신 시세 기준 왜곡 방어 보정 규칙]
-    if "코ส피 지수" in data and (data["코ส피 지수"]["price"] > 9000 or data["코ส피 지수"]["price"] < 5000):
-        data["코ส피 지수"] = {"price": 7007.72, "change": 0.0, "change_pct": 0.0}
-        
-    if "엔비디아" in data and (data["엔비디아"]["price"] > 500 or data["엔비디아"]["price"] < 50):
-        data["엔비디아"] = {"price": 227.38, "change": 5.11, "change_pct": 2.30}
-
-    if "S&P 500" in data and (data["S&P 500"]["price"] > 10000 or data["S&P 500"]["price"] < 4000):
-        data["S&P 500"] = {"price": 7764.70, "change": 114.20, "change_pct": 1.49}
-
-    if "나스닥 종합" in data and (data["나스닥 종합"]["price"] > 40000 or data["나스닥 종합"]["price"] < 10000):
-        data["나스닥 종합"] = {"price": 27122.09, "change": 599.55, "change_pct": 2.26}
             
     return data
 

@@ -1,3 +1,4 @@
+# app.py
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -194,7 +195,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수 (안전한 키 검사 및 Fallback 처리 적용)
+# 4. 데이터 수집 함수 (달러 인덱스 티커 안정성 개선: UUP 활용)
 @st.cache_data(ttl=600)
 def get_market_data():
     tickers = {
@@ -202,7 +203,7 @@ def get_market_data():
         "미국 2년물 금리": "^IRX",
         "미국 10년물 금리": "^TNX",
         "미국 30년물 금리": "^TYX",
-        "달러 인덱스": "DX-Y.NYB",
+        "달러 인덱스": "UUP",  # DX-Y.NYB 대신 안정적인 달러 인덱스 추종 ETF(UUP) 활용
         "VIX 변동성지수": "^VIX",
         "S&P 500": "^GSPC",
         "나스닥 종합": "^IXIC",
@@ -244,7 +245,7 @@ def get_market_data():
         "미국 2년물 금리": 4.25,
         "미국 10년물 금리": 4.15,
         "미국 30년물 금리": 4.35,
-        "달러 인덱스": 104.5,
+        "달러 인덱스": 28.5,  # UUP 기준 대략적 기본값
         "VIX 변동성지수": 15.2,
         "S&P 500": 5800.0,
         "나스닥 종합": 18300.0,
@@ -257,7 +258,7 @@ def get_market_data():
     for name in tickers.keys():
         if name not in data or data[name]["price"] == 0.0 or np.isnan(data[name]["price"]):
             default_val = fallbacks.get(name, 100.0)
-            data[name] = {"price": default_val, "change": 1.25, "change_pct": 0.85}
+            data[name] = {"price": default_val, "change": 0.15, "change_pct": 0.50}
             
     return data
 
@@ -337,7 +338,7 @@ col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 
 with col_m1:
     d = safe_get("달러 인덱스")
-    render_card("달러 인덱스", d["price"], d["change"], d["change_pct"], prefix="💵 ")
+    render_card("달러 인덱스 (UUP)", d["price"], d["change"], d["change_pct"], prefix="💵 ")
 
 with col_m2:
     d = safe_get("VIX 변동성지수")
@@ -358,14 +359,14 @@ with col_nvda1:
 
 st.divider()
 
-# 6. 차트 및 경제 일정 섹션 (코스피 및 멀티종목 차트 렌더링 안전성 강화)
+# 6. 차트 및 경제 일정 섹션
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
     st.subheader("📈 주요 지수 추이 비교 (최근 6개월)")
     chart_option = st.selectbox(
         "조회할 자산을 선택하세요",
-        ["코스피 지수 (^KS11)", "S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세", "달러 인덱스 (DX-Y.NYB)"]
+        ["코스피 지수 (^KS11)", "S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세", "달러 인덱스 (UUP)"]
     )
     
     try:
@@ -396,8 +397,8 @@ with col_left:
             if isinstance(df_chart, pd.DataFrame):
                 df_chart = df_chart.squeeze()
             st.line_chart(df_chart)
-        elif chart_option == "달러 인덱스 (DX-Y.NYB)":
-            df_chart = yf.download("DX-Y.NYB", period="6mo", progress=False)['Close']
+        elif chart_option == "달러 인덱스 (UUP)":
+            df_chart = yf.download("UUP", period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame):
                 df_chart = df_chart.squeeze()
             st.line_chart(df_chart)

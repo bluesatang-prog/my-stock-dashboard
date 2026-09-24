@@ -1,4 +1,4 @@
-# app.py (코스피 실시간 정상 연동 최종 완성본)
+# app.py (역사적 위기 타임라인 및 거시경제 대시보드 최종 통합본)
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -10,7 +10,7 @@ import numpy as np
 # 1. 페이지 레이아웃 설정
 st.set_page_config(
     page_title="글로벌 매크로 및 시장 대시보드",
-    page_icon="🇰🇷",
+    page_icon="📈",
     layout="wide"
 )
 
@@ -44,6 +44,11 @@ st.markdown("""
     background-color: #fbe9e7; border-left: 4px solid #e65100;
     padding: 12px 15px; border-radius: 4px; font-size: 13px; color: #4e342e;
 }
+.crisis-box {
+    background-color: #ffffff; border: 1px solid #e6ded6;
+    border-left: 4px solid #d32f2f; border-radius: 6px;
+    padding: 15px; margin-bottom: 12px;
+}
 .news-box {
     background-color: #ffffff; border: 1px solid #e6ded6;
     border-left: 3px solid #ff8f00; border-radius: 6px;
@@ -65,26 +70,26 @@ now_kst = datetime.datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
 
 st.markdown(f"""
 <div class="hero-banner">
-    <div class="hero-title">🇰🇷 글로벌 거시경제 & 주식 시장 대시보드</div>
+    <div class="hero-title">📈 글로벌 거시경제 & 주식 시장 대시보드</div>
     <div class="hero-subtitle">
-        대한민국 코스피, 미국 국채금리, 반도체 및 핵심 경제 지표 실시간 모니터링 시스템<br>
-        🕒 <b>기준 시간:</b> {now_kst} (한국 기준) &nbsp;&nbsp;|&nbsp;&nbsp; 💡 실시간 야후 파이낸스 데이터 피드가 적용되었습니다.
+        미국 주요 증시, 금리, 반도체 및 역사적 거시경제 위기 사이클 모니터링 시스템<br>
+        🕒 <b>기준 시간:</b> {now_kst} (한국 기준) &nbsp;&nbsp;|&nbsp;&nbsp; 💡 야후 파이낸스 실시간 데이터 피드가 적용되었습니다.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 수집 함수 (야후 파이낸스 최신 데이터 연동 및 안전장치)
+# 4. 데이터 수집 함수 (안정적인 글로벌 티커 연동)
 def get_market_data():
     tickers = {
-        "코스피 지수": "^KS11",
+        "S&P 500": "^GSPC",
+        "나스닥 종합": "^IXIC",
+        "다우존스": "^DJI",
+        "필라델피아 반도체": "^SOX",
         "미국 2년물 금리": "^IRX",
         "미국 10년물 금리": "^TNX",
         "미국 30년물 금리": "^TYX",
         "달러 인덱스": "UUP",
         "VIX 변동성지수": "^VIX",
-        "S&P 500": "^GSPC",
-        "나스닥 종합": "^IXIC",
-        "필라델피아 반도체": "^SOX",
         "엔비디아": "NVDA",
         "금 시세 (Gold)": "GC=F",
         "전력 인프라 (XLU)": "XLU"
@@ -94,7 +99,6 @@ def get_market_data():
     for name, ticker in tickers.items():
         try:
             t = yf.Ticker(ticker)
-            # 기간을 늘려 데이터 누락 방지
             hist = t.history(period="7d")
             
             if hist is not None and not hist.empty and 'Close' in hist.columns:
@@ -118,17 +122,17 @@ def get_market_data():
         except Exception:
             data[name] = {"price": 0.0, "change": 0.0, "change_pct": 0.0}
             
-    # 만약 데이터 수집이 0으로 들어올 경우를 대비한 기본 실시간 표준값 보정
+    # Fallback 기본값 설정
     fallbacks = {
-        "코스피 지수": {"price": 2720.50, "change": 15.20, "change_pct": 0.56},
+        "S&P 500": {"price": 5750.20, "change": 45.10, "change_pct": 0.79},
+        "나스닥 종합": {"price": 18200.40, "change": 120.30, "change_pct": 0.66},
+        "다우존스": {"price": 42100.50, "change": 210.10, "change_pct": 0.50},
+        "필라델피아 반도체": {"price": 5120.30, "change": 85.40, "change_pct": 1.70},
         "미국 2년물 금리": {"price": 3.982, "change": 0.004, "change_pct": 0.10},
         "미국 10년물 금리": {"price": 4.963, "change": -0.035, "change_pct": -0.70},
         "미국 30년물 금리": {"price": 5.296, "change": -0.035, "change_pct": -0.66},
         "달러 인덱스": {"price": 28.48, "change": 0.09, "change_pct": 0.32},
         "VIX 변동성지수": {"price": 14.87, "change": 0.06, "change_pct": 0.41},
-        "S&P 500": {"price": 5750.20, "change": 45.10, "change_pct": 0.79},
-        "나스닥 종합": {"price": 18200.40, "change": 120.30, "change_pct": 0.66},
-        "필라델피아 반도체": {"price": 5120.30, "change": 85.40, "change_pct": 1.70},
         "엔비디아": {"price": 125.50, "change": 2.10, "change_pct": 1.70},
         "금 시세 (Gold)": {"price": 2550.00, "change": 12.50, "change_pct": 0.49},
         "전력 인프라 (XLU)": {"price": 82.40, "change": -0.30, "change_pct": -0.36}
@@ -162,40 +166,34 @@ def render_card(title, price_val, change_val, change_pct_val, is_rate=False, pre
         
     price_str = f"{price_val:.3f}%" if is_rate else f"{price_val:,.2f}"
     
-    html_code = f"""
+    st.markdown(f"""
     <div class="metric-card">
         <div class="metric-title">{prefix}{title}</div>
         <div class="metric-value">{price_str}</div>
         <div class="{change_class}">{sign} {formatted_change}</div>
     </div>
-    """
-    st.markdown(html_code, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # 5. 주요 지표 섹션 배치
 st.subheader("📌 주요 거시경제 및 시장 지표 (카테고리별 분류)")
 
-st.markdown('<div class="category-header">🇰🇷 국내 시장 및 🇺🇸 주요 증시·반도체</div>', unsafe_allow_html=True)
+st.markdown('<div class="category-header">🇺🇸 글로벌 주요 증시 및 반도체</div>', unsafe_allow_html=True)
 col_c1, col_c2, col_c3, col_c4 = st.columns(4)
-
 with col_c1:
-    d = safe_get("코스피 지수")
-    render_card("코스피 지수", d["price"], d["change"], d["change_pct"], prefix="🇰🇷 ")
-
-with col_c2:
     d = safe_get("S&P 500")
     render_card("S&P 500", d["price"], d["change"], d["change_pct"])
-
-with col_c3:
+with col_c2:
     d = safe_get("나스닥 종합")
     render_card("나스닥 종합", d["price"], d["change"], d["change_pct"])
-
+with col_c3:
+    d = safe_get("다우존스")
+    render_card("다우존스", d["price"], d["change"], d["change_pct"])
 with col_c4:
     d = safe_get("필라델피아 반도체")
     render_card("필라델피아 반도체", d["price"], d["change"], d["change_pct"])
 
 st.markdown('<div class="category-header">📈 금리 및 채권 시장</div>', unsafe_allow_html=True)
 col_r1, col_r2, col_r3, col_r4 = st.columns(4)
-
 with col_r1:
     d = safe_get("미국 2년물 금리")
     render_card("미국 2년물 금리", d["price"], d["change"], d["change_pct"], is_rate=True)
@@ -210,7 +208,6 @@ with col_r4:
 
 st.markdown('<div class="category-header">💱 환율·변동성 및 🪙 원자재·섹터 테마</div>', unsafe_allow_html=True)
 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-
 with col_m1:
     d = safe_get("달러 인덱스")
     render_card("달러 인덱스 (UUP)", d["price"], d["change"], d["change_pct"], prefix="💵 ")
@@ -238,15 +235,11 @@ with col_left:
     st.subheader("📈 주요 지수 추이 비교 (최근 6개월)")
     chart_option = st.selectbox(
         "조회할 자산을 선택하세요",
-        ["코스피 지수 (^KS11)", "S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세", "달러 인덱스 (UUP)"]
+        ["S&P 500 & 나스닥", "반도체 (^SOX & NVDA)", "전력 인프라 (XLU)", "미국 국채금리 (10Y, 30Y)", "금 시세", "달러 인덱스 (UUP)"]
     )
     
     try:
-        if chart_option == "코스피 지수 (^KS11)":
-            df_chart = yf.download("^KS11", period="6mo", progress=False)['Close']
-            if isinstance(df_chart, pd.DataFrame): df_chart = df_chart.squeeze()
-            st.line_chart(df_chart)
-        elif chart_option == "S&P 500 & 나스닥":
+        if chart_option == "S&P 500 & 나스닥":
             df_chart = yf.download(["^GSPC", "^IXIC"], period="6mo", progress=False)['Close']
             if isinstance(df_chart, pd.DataFrame): st.line_chart(df_chart)
         elif chart_option == "반도체 (^SOX & NVDA)":
@@ -276,9 +269,9 @@ with col_right:
     
     with tab_short:
         schedule_data = {
-            "날짜": ["2026-10-22 (목)", "2026-10-27 (화)", "2026-10-28 (수)", "2026-10-29 (목)", "2026-10-29 (목)", "2026-11-12 (목)", "2026-10월 말~11월", "2026-10월 말~11월"],
-            "기업/이벤트": ["테슬라", "알파벳", "메타/마이크로소프트", "아마존", "삼성전자/SK하이닉스", "엔비디아", "키옥시아 실적", "미국 FOMC 회의"],
-            "국가/중요도": ["🇺🇸 미국 (🔥 높음)", "🇺🇸 미국 (🔥 높음)", "🇺🇸 미국 (🚨 최고)", "🇺🇸 미국 (🔥 높음)", "🇰🇷 대한민국 (🚨 최고)", "🇺🇸 미국 (🚨 최고)", "🇯🇵 일본 (보통)", "🇺🇸 미국 (🚨 최고)"]
+            "날짜": ["2026-10-22 (목)", "2026-10-27 (화)", "2026-10-28 (수)", "2026-10-29 (목)", "2026-11-12 (목)", "2026-10월 말~11월"],
+            "기업/이벤트": ["테슬라", "알파벳", "메타/마이크로소프트", "아마존", "엔비디아", "미국 FOMC 회의"],
+            "국가/중요도": ["🇺🇸 미국 (🔥 높음)", "🇺🇸 미국 (🔥 높음)", "🇺🇸 미국 (🚨 최고)", "🇺🇸 미국 (🔥 높음)", "🇺🇸 미국 (🚨 최고)", "🇺🇸 미국 (🚨 최고)"]
         }
         st.table(pd.DataFrame(schedule_data))
         st.markdown('<div class="header-info-box">💡 <b>Tip:</b> 3분기 실적 발표 집중 구간입니다.</div>', unsafe_allow_html=True)
@@ -293,28 +286,10 @@ with col_right:
 
 st.divider()
 
-# 7. 미국 핵심 경제지표 가이드
-st.subheader("🇺🇸 미국 핵심 경제지표 가이드")
-guide_data = {
-    "카테고리": ["통화정책", "물가/소비", "물가/소비", "고용시장", "고용시장", "경기/생산", "경기/생산"],
-    "핵심 경제지표": ["FOMC 금리 결정", "소비자물가지수(CPI)", "개인소비지출(PCE)", "비농업 고용 및 실업률", "신규 실업수당 청구", "GDP", "ISM 제조업 PMI"],
-    "발표 시기": ["연 8회", "매월 중순", "매월 말", "매월 첫째 주 금요일", "매주 목요일", "분기별", "매월 초"],
-    "투자자 해석 방법 및 중요도": [
-        "🔥 최고: 연준의 금리 방향성 결정",
-        "🔥 매우 높음: 인플레이션 대표 지표",
-        "🔥 매우 높음: 연준 신뢰 물가 지표",
-        "🔥 매우 높음: 미국 경제 체력 검증",
-        "💡 높음: 주간 고용 시장 속보",
-        "💡 보통: 실질 경제 성장 확인",
-        "💡 보통: 경기 확장/수축 선행 지표"
-    ]
-}
-st.table(pd.DataFrame(guide_data))
-
-st.divider()
-
-# 8. 역사적 위기 타임라인 차트
+# 7. 역사적 위기 타임라인 차트 및 상세 설명 섹션 복원
 st.subheader("📉 역사적 오일쇼크 및 거시경제 위기 사이클 인터랙티브 차트")
+st.markdown("전 세계 자본시장을 뒤흔들었던 주요 역사적 위기와 경기 변동 사이클을 인터랙티브 차트로 확인하세요.")
+
 oil_shock_chart_data = pd.DataFrame({
     "연도": [1970.0, 1973.0, 1975.0, 1979.0, 1985.0, 1990.0, 1997.0, 2000.0, 2008.0, 2020.0, 2022.0, 2026.0],
     "지수": [83.0, 110.0, 71.0, 114.0, 95.0, 105.0, 92.0, 120.0, 75.0, 80.0, 100.0, 115.0],
@@ -338,9 +313,45 @@ hover_points = base.mark_circle(size=160, color='#ff8f00').encode(
 interactive_chart = (line + normal_points + shock_points + hover_points).properties(height=400, width='container').interactive()
 st.altair_chart(interactive_chart, use_container_width=True)
 
+# 주요 위기 요약 카드 추가
+st.markdown("### 🔍 주요 거시경제 위기 핵심 요약")
+col_cr1, col_cr2 = st.columns(2)
+
+with col_cr1:
+    st.markdown("""
+    <div class="crisis-box">
+        <b>🛢️ 제1·2차 오일쇼크 (1973, 1979)</b><br>
+        중동 전쟁 및 공급 제한으로 유가가 폭등하며 극심한 인플레이션과 경기 침체가 동반된 <b>스태그플레이션</b>을 촉발했습니다.
+    </div>
+    <div class="crisis-box">
+        <b>💥 1997년 외환위기 (IMF)</b><br>
+        아시아 신흥국들의 단기 외채 부실과 외환보유고 고갈로 인해 대한민국을 비롯한 아시아 국가들이 대규모 유동성 위기를 겪었습니다.
+    </div>
+    <div class="crisis-box">
+        <b>🌐 2008년 글로벌 금융위기</b><br>
+        미국 서브프라임 모기지(주택담보대출) 부실 사태로 시작되어 전 세계 금융기관의 연쇄 부실과 신용 경색을 불러온 대공황 이후 최대 위기입니다.
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_cr2:
+    st.markdown("""
+    <div class="crisis-box">
+        <b>💻 2000년 닷컴버블 붕괴</b><br>
+        인터넷 및 기술 벤처 기업에 대한 과도한 투기와 거품이 꺼지면서 기술주 중심의 주가가 대폭 조정을 받았습니다.
+    </div>
+    <div class="crisis-box">
+        <b>🦠 2020년 팬데믹 (코로나19) 충격</b><br>
+        전 세계적인 경제 봉쇄로 단기 폭락이 발생했으나, 각국 정부와 연준의 전례 없는 유동성 공급으로 빠른 V자 반등을 기록했습니다.
+    </div>
+    <div class="crisis-box">
+        <b>⚡ 2022~현재 인플레이션 및 에너지 위기</b><br>
+        공급망 차질과 지정학적 리스크로 고물가·고금리 기조가 장기화되며 새로운 글로벌 통화정책 환경을 형성하고 있습니다.
+    </div>
+    """, unsafe_allow_html=True)
+
 st.divider()
 
-# 9. 뉴스 아카이브
+# 8. 뉴스 아카이브
 archived_news = [
     {"category": "📈 반도체 / 전력", "title": "반도체·전력 인프라주 동반 강세 속 증시 회복", "url": "https://economist.co.kr/article/view/ecn202609090034", "date": "2026.09.09 10:30"},
     {"category": "⚡ 전력 / 요금", "title": "\"전기요금 25조원 선납을\" 한전 요청에 삼전·닉스 거절", "url": "https://economist.co.kr/article/view/ecn202609140001", "date": "2026.09.14 14:15"},
